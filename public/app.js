@@ -12,7 +12,6 @@ const configuration = {
     iceCandidatePoolSize: 10,
 };
 
-var screen = false;
 let peerConnection = null;
 let localStream = null;
 let remoteStream = null;
@@ -24,20 +23,12 @@ function init() {
     document.querySelector('#hangupBtn').addEventListener('click', hangUp);
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
-    document.querySelector('#shareScreen').addEventListener('click', shareScreen);
-    document.getElementById('stop').addEventListener("click", function() {
-        stopCapture();
-    }, false);
     roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
 }
 
 async function createRoom() {
-    remoteStream = new MediaStream();
-    document.querySelector('#remoteVideo1').srcObject = remoteStream;
-
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#joinBtn').disabled = true;
-    document.querySelector('#shareScreen').disabled = false;
     const db = firebase.firestore();
     const roomRef = await db.collection('rooms').doc();
 
@@ -114,9 +105,6 @@ async function createRoom() {
 }
 
 function joinRoom() {
-    remoteStream = new MediaStream();
-    document.querySelector('#remoteVideo1').srcObject = remoteStream;
-
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#joinBtn').disabled = true;
 
@@ -197,83 +185,18 @@ async function joinRoomById(roomId) {
 }
 
 async function openUserMedia(e) {
-    localStream = await navigator.mediaDevices.getUserMedia(
+    const stream = await navigator.mediaDevices.getUserMedia(
         {video: true, audio: true});
-
-    //const stream = await navigator.mediaDevices.getDisplayMedia(
-    //{
-    //video: {
-    //cursor: "always"
-    //},
-    //audio: {
-    //echoCancellation: true,
-    //noiseSuppression: true,
-    //sampleRate: 44100
-    //}
-    //}
-    //);
-
-    document.querySelector('#localVideo').srcObject = localStream;
-    //localStream = stream;
+    document.querySelector('#localVideo').srcObject = stream;
+    localStream = stream;
     remoteStream = new MediaStream();
-    document.querySelector('#remoteVideo1').srcObject = remoteStream;
-
-    //document.querySelector('#remoteVideo2').srcObject = remoteStream;
+    document.querySelector('#remoteVideo').srcObject = remoteStream;
 
     console.log('Stream:', document.querySelector('#localVideo').srcObject);
     document.querySelector('#cameraBtn').disabled = true;
     document.querySelector('#joinBtn').disabled = false;
     document.querySelector('#createBtn').disabled = false;
     document.querySelector('#hangupBtn').disabled = false;
-}
-
-async function shareScreen() {
-    if (screen == false) {
-        stopCapture();
-        screen = true;
-        localStream = await navigator.mediaDevices.getDisplayMedia(
-            {
-                video: {
-                    cursor: "always"
-                },
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    sampleRate: 44100
-                }
-            }
-        ).catch(err => { console.error("Error:" + err); return null;  });
-        document.querySelector('#shareScreen span').innerText = 'Stop';
-
-        localStream.getTracks().forEach(track => {
-            peerConnection.addTrack(track, localStream);
-        });
-
-        document.querySelector('#shareScreen i').innerText = 'close';
-    } else {
-        stopCapture();
-        screen = false;
-
-        const tracks = document.querySelector('#localVideo').srcObject.getTracks();
-        tracks.forEach(track => {
-            track.stop();
-        });
-
-        localStream = await navigator.mediaDevices.getUserMedia(
-            {video: true, audio: true});
-
-        document.querySelector('#shareScreen span').innerText = 'Share screen';
-        document.querySelector('#shareScreen i').innerText = 'web';
-    }
-    document.querySelector('#localVideo').srcObject = localStream;
-    //localStream = stream;
-}
-
-function stopCapture() {
-    const tracks = document.querySelector('#localVideo').srcObject.getTracks();
-    tracks.forEach(track => {
-        track.stop();
-    });
 }
 
 async function hangUp(e) {
@@ -291,11 +214,9 @@ async function hangUp(e) {
     }
 
     document.querySelector('#localVideo').srcObject = null;
-    document.querySelector('#remoteVideo1').srcObject = null;
-    //document.querySelector('#remoteVideo2').srcObject = null;
+    document.querySelector('#remoteVideo').srcObject = null;
     document.querySelector('#cameraBtn').disabled = false;
     document.querySelector('#joinBtn').disabled = true;
-    document.querySelector('#shareScreen').disabled = true;
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#hangupBtn').disabled = true;
     document.querySelector('#currentRoom').innerText = '';
