@@ -29,6 +29,13 @@ function init() {
     roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
 }
 
+async function createOffer(peerConnection) {
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    console.log('Created offer:', offer);
+    return offer;
+}
+
 async function createRoom() {
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#joinBtn').disabled = true;
@@ -58,9 +65,7 @@ async function createRoom() {
     // Code for collecting ICE candidates above
 
     // Code for creating a room below
-    const offer = await peerConnection1.createOffer();
-    await peerConnection1.setLocalDescription(offer);
-    console.log('Created offer:', offer);
+    const offer = await createOffer(peerConnection1);
 
     const roomWithOffer = {
         'offer': {
