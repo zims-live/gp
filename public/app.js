@@ -36,6 +36,39 @@ async function createOffer(peerConnection) {
     return offer;
 }
 
+async function answerOffer(peerConnection) {
+    const answer = await peerConnection1.createAnswer();
+    console.log('Created answer:', answer);
+    await peerConnection1.setLocalDescription(answer);
+    return answer
+}
+
+
+function signalICECandidates(peerConnection, roomRef, localEndpointID) {
+    const callerCandidatesCollection = roomRef.collection(endpointID);
+    peerConnection.addEventListener('icecandidate', event => {
+        if (!event.candidate) {
+            console.log('Got final candidate!');
+            return;
+        }
+        console.log('Got candidate: ', event.candidate);
+        callerCandidatesCollection.add(event.candidate.toJSON());
+    });
+}
+
+async function receiveICECandidates(peerConnection, roomRef, remoteEndpointID) {
+    roomRef.collection(remoteEndpointID).onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(async change => {
+            if (change.type === 'added') {
+                let data = change.doc.data();
+                console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
+                await peerConnection.addIceCandidate(new RTCIceCandidate(data));
+            }
+        });
+    });
+
+}
+
 async function createRoom() {
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#joinBtn').disabled = true;
@@ -78,7 +111,6 @@ async function createRoom() {
     console.log(`New room created with SDP offer. Room ID: ${roomRef.id}`);
     document.querySelector(
         '#currentRoom').innerText = `Current room is ${roomRef.id} - You are the caller!`;
-    // Code for creating a room above
 
     peerConnection1.addEventListener('track', event => {
         console.log('Got remote track:', event.streams[0]);
@@ -97,7 +129,6 @@ async function createRoom() {
             await peerConnection1.setRemoteDescription(rtcSessionDescription);
         }
     });
-    // Listening for remote session description above
 
     // Listen for remote ICE candidates below
     roomRef.collection('calleeCandidates').onSnapshot(snapshot => {
@@ -109,7 +140,6 @@ async function createRoom() {
             }
         });
     });
-    // Listen for remote ICE candidates above
 }
 
 function joinRoom() {
