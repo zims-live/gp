@@ -15,8 +15,6 @@ const configuration = {
 let peerConnection1 = null;
 let peerConnection2 = null;
 let peerConnection3 = null;
-let localStream = null;
-let remoteStream1 = null;
 let remoteStream2 = null;
 let roomDialog = null;
 let roomId = null;
@@ -45,7 +43,7 @@ async function answerOffer(peerConnection) {
 
 
 function signalICECandidates(peerConnection, roomRef, localEndpointID) {
-    const callerCandidatesCollection = roomRef.collection(endpointID);
+    const callerCandidatesCollection = roomRef.collection(localEndpointID);
     peerConnection.addEventListener('icecandidate', event => {
         if (!event.candidate) {
             console.log('Got final candidate!');
@@ -66,7 +64,33 @@ async function receiveICECandidates(peerConnection, roomRef, remoteEndpointID) {
             }
         });
     });
+}
 
+async function receiveAnswer(peerConnection, roomRef) {
+    roomRef.onSnapshot(async snapshot => {
+        const data = snapshot.data();
+        if (!peerConnection.currentRemoteDescription && data && data.answer) {
+            console.log('Got remote description: ', data.answer);
+            const rtcSessionDescription = new RTCSessionDescription(data.answer);
+            await peerConnection.setRemoteDescription(rtcSessionDescription);
+        }
+    });
+}
+
+function receiveStream(peerConnection, remoteEndpointID) {
+    peerConnection.addEventListener('track', event => {
+        console.log('Got remote track:', event.streams[0]);
+        event.streams[0].getTracks().forEach(track => {
+            console.log('Add a track to the remoteStream:', track);
+            document.querySelector("#" + remoteEndpointID).srcObject.addTrack(track);
+        });
+    });
+}
+
+function sendStream(peerConnection) {
+    document.querySelector('#localVideo').srcObject.getTracks().forEach(track => {
+        peerConnection1.addTrack(track, document.querySelector('#localVideo').srcObject);
+    });
 }
 
 async function createRoom() {
@@ -79,22 +103,11 @@ async function createRoom() {
     peerConnection1 = new RTCPeerConnection(configuration);
 
     registerPeerConnectionListeners();
-
-    localStream.getTracks().forEach(track => {
-        peerConnection1.addTrack(track, localStream);
-    });
+    
+    sendStream(peerConnection1)
 
     // Code for collecting ICE candidates below
-    const callerCandidatesCollection = roomRef.collection('callerCandidates');
-
-    peerConnection1.addEventListener('icecandidate', event => {
-        if (!event.candidate) {
-            console.log('Got final candidate!');
-            return;
-        }
-        console.log('Got candidate: ', event.candidate);
-        callerCandidatesCollection.add(event.candidate.toJSON());
-    });
+    signalICECandidates(peerConnection1, roomRef, 'callerCandidates');
     // Code for collecting ICE candidates above
 
     // Code for creating a room below
@@ -112,34 +125,12 @@ async function createRoom() {
     document.querySelector(
         '#currentRoom').innerText = `Current room is ${roomRef.id} - You are the caller!`;
 
-    peerConnection1.addEventListener('track', event => {
-        console.log('Got remote track:', event.streams[0]);
-        event.streams[0].getTracks().forEach(track => {
-            console.log('Add a track to the remoteStream:', track);
-            remoteStream1.addTrack(track);
-        });
-    });
-
+    receiveStream(peerConnection1, "remoteVideo1");
     // Listening for remote session description below
-    roomRef.onSnapshot(async snapshot => {
-        const data = snapshot.data();
-        if (!peerConnection1.currentRemoteDescription && data && data.answer) {
-            console.log('Got remote description: ', data.answer);
-            const rtcSessionDescription = new RTCSessionDescription(data.answer);
-            await peerConnection1.setRemoteDescription(rtcSessionDescription);
-        }
-    });
+    await receiveAnswer(peerConnection1, roomRef); 
 
     // Listen for remote ICE candidates below
-    roomRef.collection('calleeCandidates').onSnapshot(snapshot => {
-        snapshot.docChanges().forEach(async change => {
-            if (change.type === 'added') {
-                let data = change.doc.data();
-                console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
-                await peerConnection1.addIceCandidate(new RTCIceCandidate(data));
-            }
-        });
-    });
+    await receiveICECandidates(peerConnection1, roomRef, "calleeCandidates");
 }
 
 function joinRoom() {
@@ -167,9 +158,7 @@ async function joinRoomById(roomId) {
         console.log('Create PeerConnection with configuration: ', configuration);
         peerConnection1 = new RTCPeerConnection(configuration);
         registerPeerConnectionListeners();
-        localStream.getTracks().forEach(track => {
-            peerConnection1.addTrack(track, localStream);
-        });
+        sendStream(peerConnection1);
 
         // Code for collecting ICE candidates below
         const calleeCandidatesCollection = roomRef.collection('calleeCandidates');
@@ -187,7 +176,7 @@ async function joinRoomById(roomId) {
             console.log('Got remote track:', event.streams[0]);
             event.streams[0].getTracks().forEach(track => {
                 console.log('Add a track to the remoteStream:', track);
-                remoteStream1.addTrack(track);
+                document.querySelector('#remoteVideo1').srcObject.addTrack(track);
             });
         });
 
@@ -226,9 +215,8 @@ async function openUserMedia(e) {
     const stream = await navigator.mediaDevices.getUserMedia(
         {video: true, audio: true});
     document.querySelector('#localVideo').srcObject = stream;
-    localStream = stream;
-    remoteStream1 = new MediaStream();
-    document.querySelector('#remoteVideo1').srcObject = remoteStream1;
+    //localStream = stream;
+    document.querySelector('#remoteVideo1').srcObject = new MediaStream();
 
     remoteStream2 = new MediaStream();
     document.querySelector('#remoteVideo2').srcObject = remoteStream2;
@@ -246,8 +234,8 @@ async function hangUp(e) {
         track.stop();
     });
 
-    if (remoteStream1) {
-        remoteStream1.getTracks().forEach(track => track.stop());
+    if (document.querySelector('#remoteVideo1').srcObject) {
+        document.querySelector('#remoteVideo1').srcObject.getTracks().forEach(track => track.stop());
     }
 
     if (remoteStream2) {
