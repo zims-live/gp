@@ -1,5 +1,4 @@
 mdc.ripple.MDCRipple.attachTo(document.querySelector('.mdc-button'));
-
 const configuration = {
     iceServers: [
         {
@@ -57,12 +56,27 @@ function signalICECandidates(peerConnection, roomRef, localEndpointID) {
 async function receiveICECandidates(peerConnection, roomRef, remoteEndpointID) {
     roomRef.collection(remoteEndpointID).onSnapshot(snapshot => {
         snapshot.docChanges().forEach(async change => {
-            if (change.type === 'added') {
+            if (change.type === 'added' && change.doc.id != "SDP") {
+                console.log(change);
                 let data = change.doc.data();
                 console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
                 await peerConnection.addIceCandidate(new RTCIceCandidate(data));
             }
         });
+    });
+}
+
+async function addUserToRoom(roomRef, localEndpointID) {
+    roomRef.onSnapshot(snapshot => {
+        if (!snapshot.data().names) { 
+            roomRef.update({
+                names : [localEndpointID]
+            });
+        } else {
+            roomRef.update({
+                names: firebase.firestore.FieldValue.arrayUnion(localEndpointID)
+            });
+        }
     });
 }
 
@@ -121,6 +135,7 @@ async function createRoom() {
     };
     await roomRef.set(roomWithOffer);
     roomId = roomRef.id;
+    await addUserToRoom(roomRef, "peer1");
     console.log(`New room created with SDP offer. Room ID: ${roomRef.id}`);
     document.querySelector(
         '#currentRoom').innerText = `Current room is ${roomRef.id} - You are the caller!`;
@@ -155,6 +170,7 @@ async function joinRoomById(roomId) {
     console.log('Got room:', roomSnapshot.exists);
 
     if (roomSnapshot.exists) {
+        await addUserToRoom(roomRef, "peer2");
         console.log('Create PeerConnection with configuration: ', configuration);
         peerConnection1 = new RTCPeerConnection(configuration);
         registerPeerConnectionListeners();
