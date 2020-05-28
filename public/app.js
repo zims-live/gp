@@ -34,7 +34,7 @@ async function createOffer(peerConnection) {
     return offer;
 }
 
-async function answerOffer(peerConnection) {
+async function createAnswer(peerConnection) {
     const answer = await peerConnection1.createAnswer();
     console.log('Created answer:', answer);
     await peerConnection1.setLocalDescription(answer);
@@ -111,6 +111,17 @@ function sendStream(peerConnection) {
     });
 }
 
+async function receiveOffer(peerConnection1, roomRef) {
+    await roomRef.collection(nameId).doc('SDP').get().then(async snapshot => {
+        const data = snapshot.data();
+        if (!peerConnection1.currentRemoteDescription && data && data.offer) {
+            const offer = snapshot.data().offer;
+            console.log('Got offer:', offer);
+            await peerConnection1.setRemoteDescription(new RTCSessionDescription(offer));
+        }
+    });
+}
+
 async function createRoom() {
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#joinBtn').disabled = true;
@@ -123,7 +134,7 @@ async function createRoom() {
     peerConnection1 = new RTCPeerConnection(configuration);
 
     registerPeerConnectionListeners();
-    
+
     sendStream(peerConnection1)
 
     // Code for collecting ICE candidates below
@@ -183,37 +194,13 @@ async function joinRoomById(roomId) {
         registerPeerConnectionListeners();
         sendStream(peerConnection1);
 
-        // Code for collecting ICE candidates below
-        const calleeCandidatesCollection = roomRef.collection(nameId);
-        peerConnection1.addEventListener('icecandidate', event => {
-            if (!event.candidate) {
-                console.log('Got final candidate!');
-                return;
-            }
-            console.log('Got candidate: ', event.candidate);
-            calleeCandidatesCollection.add(event.candidate.toJSON());
-        });
-        // Code for collecting ICE candidates above
 
-        peerConnection1.addEventListener('track', event => {
-            console.log('Got remote track:', event.streams[0]);
-            event.streams[0].getTracks().forEach(track => {
-                console.log('Add a track to the remoteStream:', track);
-                document.querySelector('#remoteVideo1').srcObject.addTrack(track);
-            });
-        });
-        //let offer;
-        // Code for creating SDP answer below
-        await roomRef.collection(nameId).doc('SDP').get().then(async snapshot => {
-            const offer = snapshot.data().offer;
-            console.log('Got offer:', offer);
-            await peerConnection1.setRemoteDescription(new RTCSessionDescription(offer));
-        });
-        //console.log('Got offer:', offer);
-        //await peerConnection1.setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await peerConnection1.createAnswer();
-        console.log('Created answer:', answer);
-        await peerConnection1.setLocalDescription(answer);
+        signalICECandidates(peerConnection1, roomRef, nameId)
+
+        // Code for collecting ICE candidates above
+        receiveStream(peerConnection1, 'remoteVideo1');
+        await receiveOffer(peerConnection1, roomRef);
+        const answer = await createAnswer(peerConnection1);
 
         const roomWithAnswer = {
             answer: {
@@ -224,16 +211,7 @@ async function joinRoomById(roomId) {
         await roomRef.collection('peer1').doc('SDP').set(roomWithAnswer);
         // Code for creating SDP answer above
 
-        // Listening for remote ICE candidates below
-        roomRef.collection('peer1').onSnapshot(snapshot => {
-            snapshot.docChanges().forEach(async change => {
-                if (change.type === 'added' && change.doc.id != 'SDP') {
-                    let data = change.doc.data();
-                    console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
-                    await peerConnection1.addIceCandidate(new RTCIceCandidate(data));
-                }
-            });
-        });
+        receiveICECandidates(peerConnection1, roomRef, 'peer1');
         // Listening for remote ICE candidates above
     }
 }
