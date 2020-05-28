@@ -122,7 +122,7 @@ async function receiveOffer(peerConnection1, roomRef) {
     });
 }
 
-async function peerRequestConnection(peerId) {
+async function peerRequestConnection(peerId, roomRef) {
     console.log('Create PeerConnection with configuration: ', configuration);
     const peerConnection1 = new RTCPeerConnection(configuration);
 
@@ -143,10 +143,9 @@ async function peerRequestConnection(peerId) {
     await roomRef.collection(peerId).doc('SDP').set(peerOffer);
 
     receiveStream(peerConnection1, "remoteVideo1");
-    // Listening for remote session description below
+
     await receiveAnswer(peerConnection1, roomRef); 
 
-    // Listen for remote ICE candidates below
     await receiveICECandidates(peerConnection1, roomRef, peerId);
 
     document.querySelector('#hangupBtn').addEventListener('click', () => {
@@ -162,44 +161,11 @@ async function createRoom() {
 
     await addUserToRoom(roomRef);
 
-    console.log('Create PeerConnection with configuration: ', configuration);
-    const peerConnection1 = new RTCPeerConnection(configuration);
-
-    registerPeerConnectionListeners(peerConnection1);
-
-    sendStream(peerConnection1)
-
-    // Code for collecting ICE candidates below
-    signalICECandidates(peerConnection1, roomRef, nameId);
-    // Code for collecting ICE candidates above
-
-    // Code for creating a room below
-    const offer = await createOffer(peerConnection1);
-
-    const roomWithOffer = {
-        'offer': {
-            type: offer.type,
-            sdp: offer.sdp,
-        },
-    };
-    roomId = roomRef.id;
-
-    await roomRef.collection("peer2").doc('SDP').set(roomWithOffer);
+    peerRequestConnection('peer2', roomRef);
 
     console.log(`Room ID: ${roomRef.id}`);
     document.querySelector(
         '#currentRoom').innerText = `Current room is ${roomRef.id} - You are the caller!`;
-
-    receiveStream(peerConnection1, "remoteVideo1");
-    // Listening for remote session description below
-    await receiveAnswer(peerConnection1, roomRef); 
-
-    // Listen for remote ICE candidates below
-    await receiveICECandidates(peerConnection1, roomRef, "peer2");
-
-    document.querySelector('#hangupBtn').addEventListener('click', () => {
-        hangUp(peerConnection1)
-    });
 }
 
 function joinRoom() {
