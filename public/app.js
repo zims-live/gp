@@ -153,6 +153,33 @@ async function peerRequestConnection(peerId, roomRef) {
     });
 }
 
+async function peerAcceptConnection(peerId, roomRef) {
+    console.log('Create PeerConnection with configuration: ', configuration);
+    const peerConnection1 = new RTCPeerConnection(configuration);
+    registerPeerConnectionListeners(peerConnection1);
+    sendStream(peerConnection1);
+
+    signalICECandidates(peerConnection1, roomRef, nameId)
+
+    receiveStream(peerConnection1, 'remoteVideo1');
+    await receiveOffer(peerConnection1, roomRef);
+    const answer = await createAnswer(peerConnection1);
+
+    const roomWithAnswer = {
+        answer: {
+            type: answer.type,
+            sdp: answer.sdp,
+        },
+    };
+    await roomRef.collection(peerId).doc('SDP').set(roomWithAnswer);
+
+    receiveICECandidates(peerConnection1, roomRef, peerId);
+
+    document.querySelector('#hangupBtn').addEventListener('click', () => {
+        hangUp(peerConnection1)
+    });
+}
+
 async function createRoom() {
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#joinBtn').disabled = true;
@@ -161,7 +188,7 @@ async function createRoom() {
 
     await addUserToRoom(roomRef);
 
-    peerRequestConnection('peer2', roomRef);
+    await peerRequestConnection('peer2', roomRef);
 
     console.log(`Room ID: ${roomRef.id}`);
     document.querySelector(
@@ -191,33 +218,7 @@ async function joinRoomById(roomId) {
 
     if (roomSnapshot.exists) {
         await addUserToRoom(roomRef);
-        console.log('Create PeerConnection with configuration: ', configuration);
-        const peerConnection1 = new RTCPeerConnection(configuration);
-        registerPeerConnectionListeners(peerConnection1);
-        sendStream(peerConnection1);
-
-
-        signalICECandidates(peerConnection1, roomRef, nameId)
-
-        // Code for collecting ICE candidates above
-        receiveStream(peerConnection1, 'remoteVideo1');
-        await receiveOffer(peerConnection1, roomRef);
-        const answer = await createAnswer(peerConnection1);
-
-        const roomWithAnswer = {
-            answer: {
-                type: answer.type,
-                sdp: answer.sdp,
-            },
-        };
-        await roomRef.collection('peer1').doc('SDP').set(roomWithAnswer);
-        // Code for creating SDP answer above
-
-        receiveICECandidates(peerConnection1, roomRef, 'peer1');
-        // Listening for remote ICE candidates above
-        document.querySelector('#hangupBtn').addEventListener('click', () => {
-            hangUp(peerConnection1)
-        });
+        await peerAcceptConnection("peer1", roomRef);
     }
 }
 
