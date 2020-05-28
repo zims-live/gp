@@ -68,8 +68,8 @@ async function receiveICECandidates(peerConnection, roomRef, remoteEndpointID) {
 
 async function addUserToRoom(roomRef, localEndpointID) {
     roomRef.onSnapshot(snapshot => {
-        if (!snapshot.data().names) { 
-            roomRef.update({
+        if (!snapshot.exists) { 
+            roomRef.set({
                 names : [localEndpointID]
             });
         } else {
@@ -81,7 +81,7 @@ async function addUserToRoom(roomRef, localEndpointID) {
 }
 
 async function receiveAnswer(peerConnection, roomRef) {
-    roomRef.onSnapshot(async snapshot => {
+    roomRef.collection('peer1').doc('SDP').onSnapshot(async snapshot => {
         const data = snapshot.data();
         if (!peerConnection.currentRemoteDescription && data && data.answer) {
             console.log('Got remote description: ', data.answer);
@@ -112,6 +112,7 @@ async function createRoom() {
     document.querySelector('#joinBtn').disabled = true;
     const db = firebase.firestore();
     const roomRef = await db.collection('rooms').doc();
+    await addUserToRoom(roomRef, "peer1");
 
     console.log('Create PeerConnection with configuration: ', configuration);
     peerConnection1 = new RTCPeerConnection(configuration);
@@ -121,7 +122,7 @@ async function createRoom() {
     sendStream(peerConnection1)
 
     // Code for collecting ICE candidates below
-    signalICECandidates(peerConnection1, roomRef, 'callerCandidates');
+    signalICECandidates(peerConnection1, roomRef, 'peer1');
     // Code for collecting ICE candidates above
 
     // Code for creating a room below
@@ -133,9 +134,10 @@ async function createRoom() {
             sdp: offer.sdp,
         },
     };
-    await roomRef.set(roomWithOffer);
     roomId = roomRef.id;
-    await addUserToRoom(roomRef, "peer1");
+
+    await roomRef.collection('peer2').doc('SDP').set(roomWithOffer);
+
     console.log(`New room created with SDP offer. Room ID: ${roomRef.id}`);
     document.querySelector(
         '#currentRoom').innerText = `Current room is ${roomRef.id} - You are the caller!`;
@@ -145,7 +147,7 @@ async function createRoom() {
     await receiveAnswer(peerConnection1, roomRef); 
 
     // Listen for remote ICE candidates below
-    await receiveICECandidates(peerConnection1, roomRef, "calleeCandidates");
+    await receiveICECandidates(peerConnection1, roomRef, "peer2");
 }
 
 function joinRoom() {
@@ -177,7 +179,7 @@ async function joinRoomById(roomId) {
         sendStream(peerConnection1);
 
         // Code for collecting ICE candidates below
-        const calleeCandidatesCollection = roomRef.collection('calleeCandidates');
+        const calleeCandidatesCollection = roomRef.collection('peer2');
         peerConnection1.addEventListener('icecandidate', event => {
             if (!event.candidate) {
                 console.log('Got final candidate!');
@@ -195,11 +197,15 @@ async function joinRoomById(roomId) {
                 document.querySelector('#remoteVideo1').srcObject.addTrack(track);
             });
         });
-
+        //let offer;
         // Code for creating SDP answer below
-        const offer = roomSnapshot.data().offer;
-        console.log('Got offer:', offer);
-        await peerConnection1.setRemoteDescription(new RTCSessionDescription(offer));
+        await roomRef.collection('peer2').doc('SDP').get().then(async snapshot => {
+            const offer = snapshot.data().offer;
+            console.log('Got offer:', offer);
+            await peerConnection1.setRemoteDescription(new RTCSessionDescription(offer));
+        });
+        //console.log('Got offer:', offer);
+        //await peerConnection1.setRemoteDescription(new RTCSessionDescription(offer));
         const answer = await peerConnection1.createAnswer();
         console.log('Created answer:', answer);
         await peerConnection1.setLocalDescription(answer);
@@ -210,13 +216,13 @@ async function joinRoomById(roomId) {
                 sdp: answer.sdp,
             },
         };
-        await roomRef.update(roomWithAnswer);
+        await roomRef.collection('peer1').doc('SDP').set(roomWithAnswer);
         // Code for creating SDP answer above
 
         // Listening for remote ICE candidates below
-        roomRef.collection('callerCandidates').onSnapshot(snapshot => {
+        roomRef.collection('peer2').onSnapshot(snapshot => {
             snapshot.docChanges().forEach(async change => {
-                if (change.type === 'added') {
+                if (change.type === 'added' && change.doc.id != 'SDP') {
                     let data = change.doc.data();
                     console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
                     await peerConnection1.addIceCandidate(new RTCIceCandidate(data));
@@ -275,11 +281,11 @@ async function hangUp(e) {
     if (roomId) {
         const db = firebase.firestore();
         const roomRef = db.collection('rooms').doc(roomId);
-        const calleeCandidates = await roomRef.collection('calleeCandidates').get();
+        const calleeCandidates = await roomRef.collection('peer2').get();
         calleeCandidates.forEach(async candidate => {
             await candidate.ref.delete();
         });
-        const callerCandidates = await roomRef.collection('callerCandidates').get();
+        const callerCandidates = await roomRef.collection('peer1').get();
         callerCandidates.forEach(async candidate => {
             await candidate.ref.delete();
         });
