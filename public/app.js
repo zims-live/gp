@@ -11,7 +11,7 @@ const configuration = {
     iceCandidatePoolSize: 10,
 };
 
-let peerConnection1 = null;
+//let peerConnection1 = null;
 let peerConnection2 = null;
 let peerConnection3 = null;
 let remoteStream2 = null;
@@ -21,7 +21,7 @@ let nameId = null;
 
 function init() {
     document.querySelector('#cameraBtn').addEventListener('click', openUserMedia);
-    document.querySelector('#hangupBtn').addEventListener('click', hangUp);
+    //document.querySelector('#hangupBtn').addEventListener('click', hangUp);
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
     roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
@@ -35,9 +35,9 @@ async function createOffer(peerConnection) {
 }
 
 async function createAnswer(peerConnection) {
-    const answer = await peerConnection1.createAnswer();
+    const answer = await peerConnection.createAnswer();
     console.log('Created answer:', answer);
-    await peerConnection1.setLocalDescription(answer);
+    await peerConnection.setLocalDescription(answer);
     return answer
 }
 
@@ -107,7 +107,7 @@ function receiveStream(peerConnection, remoteEndpointID) {
 
 function sendStream(peerConnection) {
     document.querySelector('#localVideo').srcObject.getTracks().forEach(track => {
-        peerConnection1.addTrack(track, document.querySelector('#localVideo').srcObject);
+        peerConnection.addTrack(track, document.querySelector('#localVideo').srcObject);
     });
 }
 
@@ -122,6 +122,38 @@ async function receiveOffer(peerConnection1, roomRef) {
     });
 }
 
+async function peerRequestConnection(peerId) {
+    console.log('Create PeerConnection with configuration: ', configuration);
+    const peerConnection1 = new RTCPeerConnection(configuration);
+
+    registerPeerConnectionListeners(peerConnection1);
+    sendStream(peerConnection1)
+
+    signalICECandidates(peerConnection1, roomRef, nameId);
+    const offer = await createOffer(peerConnection1);
+
+    const peerOffer = {
+        'offer': {
+            type: offer.type,
+            sdp: offer.sdp,
+        },
+    };
+    roomId = roomRef.id;
+
+    await roomRef.collection(peerId).doc('SDP').set(peerOffer);
+
+    receiveStream(peerConnection1, "remoteVideo1");
+    // Listening for remote session description below
+    await receiveAnswer(peerConnection1, roomRef); 
+
+    // Listen for remote ICE candidates below
+    await receiveICECandidates(peerConnection1, roomRef, peerId);
+
+    document.querySelector('#hangupBtn').addEventListener('click', () => {
+        hangUp(peerConnection1)
+    });
+}
+
 async function createRoom() {
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#joinBtn').disabled = true;
@@ -131,9 +163,9 @@ async function createRoom() {
     await addUserToRoom(roomRef);
 
     console.log('Create PeerConnection with configuration: ', configuration);
-    peerConnection1 = new RTCPeerConnection(configuration);
+    const peerConnection1 = new RTCPeerConnection(configuration);
 
-    registerPeerConnectionListeners();
+    registerPeerConnectionListeners(peerConnection1);
 
     sendStream(peerConnection1)
 
@@ -154,7 +186,7 @@ async function createRoom() {
 
     await roomRef.collection("peer2").doc('SDP').set(roomWithOffer);
 
-    console.log(`New room created with SDP offer. Room ID: ${roomRef.id}`);
+    console.log(`Room ID: ${roomRef.id}`);
     document.querySelector(
         '#currentRoom').innerText = `Current room is ${roomRef.id} - You are the caller!`;
 
@@ -164,6 +196,10 @@ async function createRoom() {
 
     // Listen for remote ICE candidates below
     await receiveICECandidates(peerConnection1, roomRef, "peer2");
+
+    document.querySelector('#hangupBtn').addEventListener('click', () => {
+        hangUp(peerConnection1)
+    });
 }
 
 function joinRoom() {
@@ -190,8 +226,8 @@ async function joinRoomById(roomId) {
     if (roomSnapshot.exists) {
         await addUserToRoom(roomRef);
         console.log('Create PeerConnection with configuration: ', configuration);
-        peerConnection1 = new RTCPeerConnection(configuration);
-        registerPeerConnectionListeners();
+        const peerConnection1 = new RTCPeerConnection(configuration);
+        registerPeerConnectionListeners(peerConnection1);
         sendStream(peerConnection1);
 
 
@@ -213,6 +249,9 @@ async function joinRoomById(roomId) {
 
         receiveICECandidates(peerConnection1, roomRef, 'peer1');
         // Listening for remote ICE candidates above
+        document.querySelector('#hangupBtn').addEventListener('click', () => {
+            hangUp(peerConnection1)
+        });
     }
 }
 
@@ -233,7 +272,7 @@ async function openUserMedia(e) {
     document.querySelector('#hangupBtn').disabled = false;
 }
 
-async function hangUp(e) {
+async function hangUp(peerConnection1) {
     const tracks = document.querySelector('#localVideo').srcObject.getTracks();
     tracks.forEach(track => {
         track.stop();
@@ -278,23 +317,23 @@ async function hangUp(e) {
     document.location.reload(true);
 }
 
-function registerPeerConnectionListeners() {
-    peerConnection1.addEventListener('icegatheringstatechange', () => {
+function registerPeerConnectionListeners(peerConnection) {
+    peerConnection.addEventListener('icegatheringstatechange', () => {
         console.log(
-            `ICE gathering state changed: ${peerConnection1.iceGatheringState}`);
+            `ICE gathering state changed: ${peerConnection.iceGatheringState}`);
     });
 
-    peerConnection1.addEventListener('connectionstatechange', () => {
-        console.log(`Connection state change: ${peerConnection1.connectionState}`);
+    peerConnection.addEventListener('connectionstatechange', () => {
+        console.log(`Connection state change: ${peerConnection.connectionState}`);
     });
 
-    peerConnection1.addEventListener('signalingstatechange', () => {
-        console.log(`Signaling state change: ${peerConnection1.signalingState}`);
+    peerConnection.addEventListener('signalingstatechange', () => {
+        console.log(`Signaling state change: ${peerConnection.signalingState}`);
     });
 
-    peerConnection1.addEventListener('iceconnectionstatechange ', () => {
+    peerConnection.addEventListener('iceconnectionstatechange ', () => {
         console.log(
-            `ICE connection state change: ${peerConnection1.iceConnectionState}`);
+            `ICE connection state change: ${peerConnection.iceConnectionState}`);
     });
 }
 
