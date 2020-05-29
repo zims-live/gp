@@ -22,6 +22,7 @@ function init() {
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
     roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
+
 }
 
 async function createOffer(peerConnection) {
@@ -289,6 +290,7 @@ async function openUserMedia(e) {
     document.querySelector('#joinBtn').disabled = false;
     document.querySelector('#createBtn').disabled = false;
     document.querySelector('#hangupBtn').disabled = false;
+    
 }
 
 function hangUp() {
