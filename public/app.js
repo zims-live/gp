@@ -103,8 +103,8 @@ function receiveStream(peerConnection, remoteEndpointID) {
     let peerNode = document.getElementById("localVideo").cloneNode();
     peerNode.id = remoteEndpointID; 
     document.getElementById("videos").appendChild(peerNode);
-    
     document.getElementById(remoteEndpointID).srcObject = new MediaStream();
+    document.getElementById(remoteEndpointID).muted = false;
 
     peerConnection.addEventListener('track', event => {
         console.log('Got remote track:', event.streams[0]);
