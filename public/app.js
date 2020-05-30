@@ -22,7 +22,6 @@ function init() {
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
     roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
-
 }
 
 async function createOffer(peerConnection) {
@@ -37,6 +36,14 @@ async function createAnswer(peerConnection) {
     console.log('Created answer:', answer);
     await peerConnection.setLocalDescription(answer);
     return answer
+}
+
+async function signalDisconect(roomRef) {
+    document.querySelector('#hangupBtn').addEventListener('click', () => {
+        roomRef.update({
+            disconnected: firebase.firestore.FieldValue.arrayUnion(nameId)
+        });
+    });
 }
 
 
@@ -91,7 +98,7 @@ async function receiveAnswer(peerConnection, roomRef, peerId) {
     roomRef.collection(nameId).doc('SDP').onSnapshot(async snapshot => {
         const data = snapshot.data();
         console.log("You are receiving an answer from: " + peerId);
-        if (!peerConnection.currentRemoteDescription && data && (peerId in data)) {
+        if (!peerConnection.currentRemoteDescription && data && (peerId in data) && ("answer" in data[peerId])) {
             console.log('Got remote description: ', data[peerId].answer);
             const rtcSessionDescription = new RTCSessionDescription(data[peerId].answer);
             await peerConnection.setRemoteDescription(rtcSessionDescription);
@@ -121,10 +128,34 @@ function sendStream(peerConnection) {
     });
 }
 
+async function sendOffer(offer, roomRef, peerId) {
+    const peerOffer = {
+        [nameId]: {
+            'offer': {
+                type: offer.type,
+                sdp: offer.sdp,
+            }
+        },
+    };
+    await roomRef.collection(peerId).doc('SDP').set(peerOffer);
+}
+
+async function sendAnswer(answer, roomRef, peerId) {
+    const peerAnswer = {
+        [nameId] : {
+            'answer': {
+                type: answer.type,
+                sdp: answer.sdp,
+            },
+        }
+    };
+    await roomRef.collection(peerId).doc('SDP').set(peerAnswer);
+}
+
 async function receiveOffer(peerConnection1, roomRef, peerId) {
     await roomRef.collection(nameId).doc('SDP').get().then(async snapshot => {
         const data = snapshot.data();
-        if (!peerConnection1.currentRemoteDescription && data && data[peerId].offer) {
+        if (!peerConnection1.currentRemoteDescription && data && (peerId in data) && ("offer" in data[peerId])) {
             console.log(data);
             const offer = data[peerId].offer;
             console.log('Got offer:', offer);
@@ -143,28 +174,73 @@ async function peerRequestConnection(peerId, roomRef) {
     signalICECandidates(peerConnection1, roomRef, peerId);
     const offer = await createOffer(peerConnection1);
 
-    const peerOffer = {
-        [nameId]: {
-            'offer': {
-                type: offer.type,
-                sdp: offer.sdp,
-            }
-        },
-    };
-    roomId = roomRef.id;
-
-    await roomRef.collection(peerId).doc('SDP').set(peerOffer);
+    await sendOffer(offer, roomRef, peerId);
 
     receiveStream(peerConnection1, peerId);
 
     await receiveAnswer(peerConnection1, roomRef, peerId); 
 
     await receiveICECandidates(peerConnection1, roomRef, peerId);
+    
+    signalDisconect(roomRef);
 
-    peerConnection1.onconnectionstatechange = function(event) {
-        if (peerConnection1.connectionState == "disconnected") {
-            peerConnection1.close();
-            document.getElementById(peerId).remove();
+    roomRef.onSnapshot(snapshot => {
+        if (snapshot.exists && snapshot.data().disconnected) {
+            const disconnected = snapshot.data().disconnected;
+            disconnected.forEach(peer => {
+                if (peer == peerId) {
+                    peerConnection1.close();    
+                    document.getElementById(peerId).remove();
+                }
+            });
+        }
+    });
+
+    //peerConnection1.onconnectionstatechange = function(event) {
+        //if (peerConnection1.connectionState == "disconnected") {
+            //peerConnection1.close();
+            //document.getElementById(peerId).remove();
+        //}
+    //}
+
+    //peerConnection1.oniceconnectionstatechange = function(event) {
+        //if (peerConnection1.iceConnectionState === "failed" 
+            //|| peerConnection1.iceConnectionState === "disconnected") {
+            
+            //if (peerConnection1.restartIce) {
+                //peerConnection1.restartIce();
+            //} else {
+                //peerConnection1.createOffer({ iceRestart: true })
+                    //.then(peerConnection1.setLocalDescription)
+                    //.then(async offer => {
+                        //await sendOffer(offer, roomRef, peerId);
+                    //});
+            //}
+        //}
+    //}
+    await restartConnection(peerConnection1, roomRef, peerId);
+}
+
+async function restartConnection(peerConnection, roomRef, peerId) {
+    peerConnection.oniceconnectionstatechange = async function(event) {
+        if (peerConnection.iceConnectionState === "disconnected") {
+            const snapshot = await roomRef.get();
+
+
+            if (!(snapshot.exists && ("disconnected" in snapshot.data()) 
+                && snapshot.data().disconnected.includes(peerId))) {
+                console.log('Restarting connection');
+                console.log(snapshot.data());
+                if (peerConnection.restartIce) {
+                    peerConnection.restartIce();
+                } else {
+                    peerConnection.createOffer({ iceRestart: true })
+                        .then(peerConnection.setLocalDescription)
+                        .then(async offer => {
+                            await sendOffer(offer, roomRef, peerId);
+                        });
+                }
+            }
         }
     }
 }
@@ -178,27 +254,35 @@ async function peerAcceptConnection(peerId, roomRef) {
     signalICECandidates(peerConnection1, roomRef, peerId)
 
     receiveStream(peerConnection1, peerId);
+
     await receiveOffer(peerConnection1, roomRef, peerId);
+
     const answer = await createAnswer(peerConnection1);
 
-    const peerAnswer = {
-        [nameId] : {
-            'answer': {
-                type: answer.type,
-                sdp: answer.sdp,
-            },
-        }
-    };
-    await roomRef.collection(peerId).doc('SDP').set(peerAnswer);
+    await sendAnswer(answer, roomRef, peerId);
 
-    receiveICECandidates(peerConnection1, roomRef, peerId);
+    await receiveICECandidates(peerConnection1, roomRef, peerId);
 
-    peerConnection1.onconnectionstatechange = function(event) {
-        if (peerConnection1.connectionState == "disconnected") {
-            peerConnection1.close();
-            document.getElementById(peerId).remove();
+    signalDisconect(roomRef);
+
+    roomRef.onSnapshot(snapshot => {
+        if (snapshot.exists && snapshot.data().disconnected) {
+            const disconnected = snapshot.data().disconnected;
+            disconnected.forEach(peer => {
+                if (peer == peerId) {
+                    peerConnection1.close();    
+                    document.getElementById(peerId).remove();
+                }
+            });
         }
-    }
+    });
+
+    //peerConnection1.onconnectionstatechange = function(event) {
+    //if (peerConnection1.connectionState == "disconnected") {
+    //peerConnection1.close();
+    //document.getElementById(peerId).remove();
+    //}
+    //}
 }
 
 async function createRoom() {
@@ -260,7 +344,7 @@ async function joinRoomById(roomId) {
                 if (peers[0] && "offer" in snapshot.data()[peers[0]]) {
                     console.log("Accepting Request from: " + peers[0]);
                     peerAcceptConnection(peers[0], roomRef);
-                    console.log("Removed Offer from: " + peers[0]);
+                    //console.log("Removed Offer from: " + peers[0]);
                     removeOffer(peers[0]);
                 } else {
                     console.log("Mesh has been setup.");
@@ -290,7 +374,6 @@ async function openUserMedia(e) {
     document.querySelector('#joinBtn').disabled = false;
     document.querySelector('#createBtn').disabled = false;
     document.querySelector('#hangupBtn').disabled = false;
-    
 }
 
 function hangUp() {
@@ -325,7 +408,7 @@ function hangUp() {
     //await roomRef.delete();
     //}
 
-    document.location.reload(true);
+    //document.location.reload(true);
 }
 
 function registerPeerConnectionListeners(peerConnection) {
