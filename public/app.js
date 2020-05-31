@@ -38,10 +38,11 @@ async function createAnswer(peerConnection) {
     return answer
 }
 
-async function signalDisconect(roomRef) {
+async function signalDisconnect(roomRef) {
     document.querySelector('#hangupBtn').addEventListener('click', () => {
-        roomRef.update({
-            disconnected: firebase.firestore.FieldValue.arrayUnion(nameId)
+        console.log("Disconnecting");
+        roomRef.collection('disconnected').doc().set({
+            disconnected: nameId
         });
     });
 }
@@ -164,6 +165,18 @@ async function receiveOffer(peerConnection1, roomRef, peerId) {
     });
 }
 
+function closeConnection(peerConnection, roomRef, peerId) {
+    roomRef.collection('disconnected').where('disconnected', '==', peerId).onSnapshot(querySnapshot => {
+        querySnapshot.forEach(snapshot => {
+            if (snapshot.exists) {
+                document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
+                peerConnection.close();    
+                document.getElementById(peerId).remove();
+            }
+        });
+    });
+}
+
 async function peerRequestConnection(peerId, roomRef) {
     console.log('Create PeerConnection with configuration: ', configuration);
     const peerConnection1 = new RTCPeerConnection(configuration);
@@ -181,55 +194,21 @@ async function peerRequestConnection(peerId, roomRef) {
     await receiveAnswer(peerConnection1, roomRef, peerId); 
 
     await receiveICECandidates(peerConnection1, roomRef, peerId);
-    
-    signalDisconect(roomRef);
 
-    roomRef.onSnapshot(snapshot => {
-        if (snapshot.exists && snapshot.data().disconnected) {
-            const disconnected = snapshot.data().disconnected;
-            disconnected.forEach(peer => {
-                if (peer == peerId) {
-                    peerConnection1.close();    
-                    document.getElementById(peerId).remove();
-                }
-            });
-        }
-    });
+    document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection1.close());
 
-    //peerConnection1.onconnectionstatechange = function(event) {
-        //if (peerConnection1.connectionState == "disconnected") {
-            //peerConnection1.close();
-            //document.getElementById(peerId).remove();
-        //}
-    //}
-
-    //peerConnection1.oniceconnectionstatechange = function(event) {
-        //if (peerConnection1.iceConnectionState === "failed" 
-            //|| peerConnection1.iceConnectionState === "disconnected") {
-            
-            //if (peerConnection1.restartIce) {
-                //peerConnection1.restartIce();
-            //} else {
-                //peerConnection1.createOffer({ iceRestart: true })
-                    //.then(peerConnection1.setLocalDescription)
-                    //.then(async offer => {
-                        //await sendOffer(offer, roomRef, peerId);
-                    //});
-            //}
-        //}
-    //}
-    await restartConnection(peerConnection1, roomRef, peerId);
+    closeConnection(peerConnection1, roomRef, peerId);
+    //restartConnection(peerConnection1, roomRef, peerId);
 }
 
-async function restartConnection(peerConnection, roomRef, peerId) {
+function restartConnection(peerConnection, roomRef, peerId) {
     peerConnection.oniceconnectionstatechange = async function(event) {
         if (peerConnection.iceConnectionState === "disconnected") {
-            const snapshot = await roomRef.get();
+            const querySnapshot = await roomRef.collection('disconnected').where('disconnected', '==', peerId).get();
+            const disconnected = querySnapshot.docs.length == 0;
 
-
-            if (!(snapshot.exists && ("disconnected" in snapshot.data()) 
-                && snapshot.data().disconnected.includes(peerId))) {
-                console.log('Restarting connection');
+            if (!disconnected) {
+                console.log('Restarting connection: ');
                 console.log(snapshot.data());
                 if (peerConnection.restartIce) {
                     peerConnection.restartIce();
@@ -263,26 +242,9 @@ async function peerAcceptConnection(peerId, roomRef) {
 
     await receiveICECandidates(peerConnection1, roomRef, peerId);
 
-    signalDisconect(roomRef);
+    document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection1.close());
 
-    roomRef.onSnapshot(snapshot => {
-        if (snapshot.exists && snapshot.data().disconnected) {
-            const disconnected = snapshot.data().disconnected;
-            disconnected.forEach(peer => {
-                if (peer == peerId) {
-                    peerConnection1.close();    
-                    document.getElementById(peerId).remove();
-                }
-            });
-        }
-    });
-
-    //peerConnection1.onconnectionstatechange = function(event) {
-    //if (peerConnection1.connectionState == "disconnected") {
-    //peerConnection1.close();
-    //document.getElementById(peerId).remove();
-    //}
-    //}
+    closeConnection(peerConnection1, roomRef, peerId);
 }
 
 async function createRoom() {
@@ -303,9 +265,11 @@ async function createRoom() {
         }
     });
 
+    signalDisconnect(roomRef);
+
     console.log(`Room ID: ${roomRef.id}`);
     document.querySelector(
-        '#currentRoom').innerText = `Current room is ${roomRef.id} - You are the caller!`;
+        '#currentRoom').innerText = `Current room is ${roomRef.id} - You are the ${nameId}!`;
 }
 
 function joinRoom() {
@@ -317,7 +281,7 @@ function joinRoom() {
             roomId = document.querySelector('#room-id').value;
             console.log('Join room: ', roomId);
             document.querySelector(
-                '#currentRoom').innerText = `Current room is ${roomId} - You are the callee!`;
+                '#currentRoom').innerText = `Current room is ${roomId} - You are ${nameId}!`;
             await joinRoomById(roomId);
         }, {once: true});
     roomDialog.open();
@@ -361,6 +325,7 @@ async function joinRoomById(roomId) {
             }
         });
 
+        signalDisconnect(roomRef);
     }
 }
 
