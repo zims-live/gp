@@ -63,7 +63,6 @@ async function receiveICECandidates(peerConnection, roomRef, remoteEndpointID) {
                 let data = change.doc.data();
                 console.log(`Got new remote ICE candidate: ${JSON.stringify(data)}`);
                 await peerConnection.addIceCandidate(new RTCIceCandidate(data));
-                //roomRef.collection(remoteEndpointID).doc(change.doc.id).delete();
             }
         });
     });
@@ -88,7 +87,6 @@ async function addUserToRoom(roomRef) {
 
 async function receiveAnswer(peerConnection, roomRef, peerId) {
     roomRef.collection(nameId).doc('SDP').collection('answer').doc(peerId).onSnapshot(async snapshot => {
-        //console.log("You are receiving an answer from: " + peerId);
         if (snapshot.exists) {
             const data = snapshot.data();
             console.log('Got remote description: ', data.answer);
@@ -101,9 +99,6 @@ async function receiveAnswer(peerConnection, roomRef, peerId) {
 function receiveStream(peerConnection, remoteEndpointID) {
     numberOfDisplayedStreams += 1;
     document.getElementById("videos").style.columns = numberOfDisplayedStreams;
-
-    //let peerNode = document.getElementsByClassName("video-box")[0].cloneNode();
-    //peerNode.firstElementChild.id = remoteEndpointID; 
 
     const peerNode = document.getElementsByClassName('video-box')[0].cloneNode();
     peerNode.appendChild(document.getElementById('localVideo').cloneNode());
@@ -361,31 +356,12 @@ function hangUp() {
         track.stop();
     });
 
-    //while(document.getElementById("videos").lastChild.id != "localVideo") { 
-    //document.getElementById("videos").lastChild.remove(); 
-    //}
-
     document.querySelector('#localVideo').srcObject = null;
     document.querySelector('#cameraBtn').disabled = false;
     document.querySelector('#joinBtn').disabled = true;
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#hangupBtn').disabled = true;
     document.querySelector('#currentRoom').innerText = '';
-
-    // Delete room on hangup
-    //if (roomId) {
-    //const db = firebase.firestore();
-    //const roomRef = db.collection('rooms').doc(roomId);
-    //const calleeCandidates = await roomRef.collection(nameId).get();
-    //calleeCandidates.forEach(async candidate => {
-    //await candidate.ref.delete();
-    //});
-    //const callerCandidates = await roomRef.collection(nameId).get();
-    //callerCandidates.forEach(async candidate => {
-    //await candidate.ref.delete();
-    //});
-    //await roomRef.delete();
-    //}
 
     document.location.reload(true);
 }
