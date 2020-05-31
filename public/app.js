@@ -13,6 +13,7 @@ const configuration = {
 
 let roomDialog = null;
 let nameId = null;
+let numberOfDisplayedStreams = 1;
 
 async function createOffer(peerConnection) {
     const offer = await peerConnection.createOffer();
@@ -98,11 +99,18 @@ async function receiveAnswer(peerConnection, roomRef, peerId) {
 }
 
 function receiveStream(peerConnection, remoteEndpointID) {
-    document.querySelector('#localVideo').style.width 
-        = document.querySelector('#localVideo').style.width.slice(0,2) / 2 + "%";
-    let peerNode = document.getElementById("localVideo").cloneNode();
-    peerNode.id = remoteEndpointID; 
+    numberOfDisplayedStreams += 1;
+    document.getElementById("videos").style.columns = numberOfDisplayedStreams;
+
+    //let peerNode = document.getElementsByClassName("video-box")[0].cloneNode();
+    //peerNode.firstElementChild.id = remoteEndpointID; 
+
+    const peerNode = document.getElementsByClassName('video-box')[0].cloneNode();
+    peerNode.appendChild(document.getElementById('localVideo').cloneNode());
+    peerNode.firstElementChild.id = remoteEndpointID;
+
     document.getElementById("videos").appendChild(peerNode);
+
     document.getElementById(remoteEndpointID).srcObject = new MediaStream();
     document.getElementById(remoteEndpointID).muted = false;
 
@@ -160,6 +168,8 @@ function closeConnection(peerConnection, roomRef, peerId) {
                 document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection.close();    
                 document.getElementById(peerId).remove();
+                numberOfDisplayedStreams -= 1;
+                document.getElementById("videos").style.columns = numberOfDisplayedStreams;
             }
         });
     });
@@ -351,9 +361,9 @@ function hangUp() {
         track.stop();
     });
 
-    while(document.getElementById("videos").lastChild.id != "localVideo") { 
-        document.getElementById("videos").lastChild.remove(); 
-    }
+    //while(document.getElementById("videos").lastChild.id != "localVideo") { 
+    //document.getElementById("videos").lastChild.remove(); 
+    //}
 
     document.querySelector('#localVideo').srcObject = null;
     document.querySelector('#cameraBtn').disabled = false;
@@ -389,7 +399,6 @@ function init() {
     window.addEventListener('beforeunload', () => {
         document.getElementById('hangupBtn').click();
     });
-    document.querySelector('#localVideo').style.width = "99%"
 }
 
 init();

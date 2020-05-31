@@ -4,9 +4,6 @@ body {
     font-family: Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
 }
 
 #message {
@@ -79,44 +76,22 @@ button {
 }
 
 div#videos {
-    display = grid;
-    width = 100%;
-    /*height = 100%;*/
-    /*display: flex;*/
-    /*flex-direction: row;*/
-    /*flex-wrap: wrap;*/
-    /*margin: 1em;*/
-}
-
-div#videos > video {
-    position: relative;
-    background: black;
-    /*max-width=100%;*/
-    /*height: 100%;*/
-    /*display: block;*/
     width: 100%;
-    /*max-width = 640px;*/
     height: auto;
+    columns: 1;
+    column-gap: 4px;
+    overflow: hidden;
 }
 
-/*.video-container {*/
-/*position: absolute;*/
-/*top: 0;*/
-/*bottom: 0;*/
-/*width: 100%;*/
-/*height: 100%; */
-/*overflow: hidden;*/
-/*}*/
-/*.video-container video {*/
-/*[> Make video to at least 100% wide and tall <]*/
+.video-box {
+    width: 100%;
+    height: auto;
+    position: relative;
+    overflow: hidden;
+}
 
-/*[> Setting width & height to auto prevents the browser from stretching or squishing the video <]*/
-
-/*[> Center the video <]*/
-/*position: absolute;*/
-/*top: 50%;*/
-/*left: 50%;*/
-/*transform: translate(-50%,-50%);*/
-/*}*/
-/*}*/
-/*}*/
+.video-box video {
+    width: 100%;
+    height: auto;
+    background: black;
+}
