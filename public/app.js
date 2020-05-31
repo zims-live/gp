@@ -38,7 +38,6 @@ function signalDisconnect(roomRef) {
             disconnected: nameId
         });
     });
-   
 }
 
 function signalICECandidates(peerConnection, roomRef, peerId) {
@@ -197,11 +196,18 @@ async function peerRequestConnection(peerId, roomRef) {
 
     closeConnection(peerConnection1, roomRef, peerId);
 
-    peerConnection1.addEventListener('connectionstatechange', () => {
-        if (peerConnection1.connectionState == 'disconnected') {
-            closeConnection(peerConnection1, roomRef, peerId);
+    peerConnection1.onconnectionstatechange = function(event) {
+        switch(peerConnection1.connectionState) {
+            case "failed":
+                document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
+                peerConnection1.close();    
+                document.getElementById(peerId).remove();
+                numberOfConnectedPeers -= 1;
+                numberOfDisplayedStreams = (numberOfConnectedPeers < 2) ? numberOfDisplayedStreams - 1 : 3;
+                document.getElementById("videos").style.columns = numberOfDisplayedStreams;
+            break;
         }
-    });
+    }
 
     restartConnection(peerConnection1, roomRef, peerId);
 }
@@ -245,11 +251,18 @@ async function peerAcceptConnection(peerId, roomRef) {
 
     closeConnection(peerConnection1, roomRef, peerId);
 
-    peerConnection1.addEventListener('connectionstatechange', () => {
-        if (peerConnection1.connectionState == 'disconnected') {
-            closeConnection(peerConnection1, roomRef, peerId);
+    peerConnection1.onconnectionstatechange = function(event) {
+        switch(peerConnection1.connectionState) {
+            case "failed":
+                document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
+                peerConnection1.close();    
+                document.getElementById(peerId).remove();
+                numberOfConnectedPeers -= 1;
+                numberOfDisplayedStreams = (numberOfConnectedPeers < 2) ? numberOfDisplayedStreams - 1 : 3;
+                document.getElementById("videos").style.columns = numberOfDisplayedStreams;
+            break;
         }
-    });
+    }
 
     restartConnection(peerConnection1, roomRef, peerId);
 }
@@ -414,9 +427,9 @@ function init() {
     document.querySelector('#hangupBtn').addEventListener('click', hangUp);
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
-    window.addEventListener('beforeunload', () => {
+    window.onunload = window.onbeforeunload = () => {
         document.getElementById('hangupBtn').click();
-    });
+    };
 }
 
 init();
