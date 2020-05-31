@@ -1,8 +1,16 @@
-# Firebase + WebRTC Codelab
-### Full code solution can be found under the branch: _solution_
-This is the GitHub repo for the FirebaseRTC codelab. This will teach you how 
-to use Firebase Cloud Firestore for signalling in a WebRTC video chat application.
+ZiMS: A Modern Cloud-based Solution to Multi-party Conferencing
+------------
 
-The solution to this codelab can be seen in the _solution_ branch.
+Sprint 1
+1.  Firebase data model
+2.  Multiparty functionality
+3.  Hang up feature
+4.  Peerconnection modularization
 
-See http://webrtc.org for details.
+Sprint 2
+1.  System stress test
+2.  Grid layout fix
+3.  Mute feature
+4.  Content sharing
+5.  Link sharing
+6.  WhatsApp sharing

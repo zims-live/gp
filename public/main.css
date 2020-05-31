@@ -76,15 +76,22 @@ button {
 }
 
 div#videos {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    width: 100%;
+    height: auto;
+    columns: 1;
+    column-gap: 4px;
+    overflow: hidden;
 }
 
-div#videos > video {
+.video-box {
+    width: 100%;
+    height: auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.video-box video {
+    width: 100%;
+    height: auto;
     background: black;
-    width: 640px;
-    height: 100%;
-    display: block;
-    margin: 1em;
 }
