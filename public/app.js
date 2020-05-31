@@ -14,6 +14,7 @@ const configuration = {
 let roomDialog = null;
 let nameId = null;
 let numberOfDisplayedStreams = 1;
+let numberOfConnectedPeers = 0;
 
 async function createOffer(peerConnection) {
     const offer = await peerConnection.createOffer();
@@ -37,6 +38,7 @@ function signalDisconnect(roomRef) {
             disconnected: nameId
         });
     });
+   
 }
 
 function signalICECandidates(peerConnection, roomRef, peerId) {
@@ -97,7 +99,9 @@ async function receiveAnswer(peerConnection, roomRef, peerId) {
 }
 
 function receiveStream(peerConnection, remoteEndpointID) {
-    numberOfDisplayedStreams += 1;
+    numberOfDisplayedStreams = (numberOfDisplayedStreams == 3) ? 3: numberOfDisplayedStreams + 1;
+    numberOfConnectedPeers += 1;
+
     document.getElementById("videos").style.columns = numberOfDisplayedStreams;
 
     const peerNode = document.getElementsByClassName('video-box')[0].cloneNode();
@@ -163,7 +167,8 @@ function closeConnection(peerConnection, roomRef, peerId) {
                 document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection.close();    
                 document.getElementById(peerId).remove();
-                numberOfDisplayedStreams -= 1;
+                numberOfConnectedPeers -= 1;
+                numberOfDisplayedStreams = (numberOfConnectedPeers < 2) ? numberOfDisplayedStreams - 1 : 3;
                 document.getElementById("videos").style.columns = numberOfDisplayedStreams;
             }
         });
@@ -191,6 +196,12 @@ async function peerRequestConnection(peerId, roomRef) {
     document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection1.close());
 
     closeConnection(peerConnection1, roomRef, peerId);
+
+    peerConnection1.addEventListener('connectionstatechange', () => {
+        if (peerConnection1.connectionState == 'disconnected') {
+            closeConnection(peerConnection1, roomRef, peerId);
+        }
+    });
 
     restartConnection(peerConnection1, roomRef, peerId);
 }
@@ -234,6 +245,12 @@ async function peerAcceptConnection(peerId, roomRef) {
 
     closeConnection(peerConnection1, roomRef, peerId);
 
+    peerConnection1.addEventListener('connectionstatechange', () => {
+        if (peerConnection1.connectionState == 'disconnected') {
+            closeConnection(peerConnection1, roomRef, peerId);
+        }
+    });
+
     restartConnection(peerConnection1, roomRef, peerId);
 }
 
@@ -259,9 +276,17 @@ function registerPeerConnectionListeners(peerConnection) {
 
 async function createRoom() {
     document.querySelector('#createBtn').disabled = true;
+    document.querySelector('#shareButton').disabled = false;
     document.querySelector('#joinBtn').disabled = true;
     const db = firebase.firestore();
     const roomRef = await db.collection('rooms').doc();
+
+    document.querySelector('#shareButton').onclick = () => {
+        window.open(
+            `https://api.whatsapp.com/send?text=https://fir-rtc-9bbb9.web.app?roomId=${roomRef.id}`,
+            "_blank"
+        )
+    };
 
     await addUserToRoom(roomRef);
 
@@ -297,6 +322,14 @@ async function joinRoomById(roomId) {
     console.log('Got room:', roomSnapshot.exists);
 
     if (roomSnapshot.exists) {
+        document.querySelector('#shareButton').onclick = () => {
+            window.open(
+                `https://api.whatsapp.com/send?text=https://fir-rtc-9bbb9.web.app?roomId=${roomRef.id}`,
+                "_blank"
+            )
+        };
+
+        document.querySelector('#shareButton').disabled = false;
         document.querySelector('#createBtn').disabled = true;
         document.querySelector('#joinBtn').disabled = true;
         await addUserToRoom(roomRef);
@@ -367,11 +400,20 @@ function hangUp() {
 }
 
 function init() {
+    params = new URLSearchParams(location.search);
+    roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
+
+    if (params.get('roomId')) {
+        console.log('Done');
+        document.querySelector('#room-id').value = params.get('roomId');
+        openUserMedia();
+        joinRoom();
+    }
+
     document.querySelector('#cameraBtn').addEventListener('click', openUserMedia);
     document.querySelector('#hangupBtn').addEventListener('click', hangUp);
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
-    roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
     window.addEventListener('beforeunload', () => {
         document.getElementById('hangupBtn').click();
     });
