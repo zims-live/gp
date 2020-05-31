@@ -29,15 +29,10 @@ async function createAnswer(peerConnection) {
 }
 
 function signalDisconnect(roomRef) {
-    document.querySelector('#hangupBtn').addEventListener('click', () => {
+    document.querySelector('#hangupBtn').addEventListener('click', async () => {
         console.log("Disconnecting");
 
-        var unsubscribe = roomRef.onSnapshot(function() {
-        });
-
-        unsubscribe();
-
-        roomRef.collection('disconnected').doc().set({
+        await roomRef.collection('disconnected').doc().set({
             disconnected: nameId
         });
     });
@@ -74,15 +69,15 @@ async function receiveICECandidates(peerConnection, roomRef, remoteEndpointID) {
 }
 
 async function addUserToRoom(roomRef) {
-    await roomRef.get().then(snapshot => {
+    await roomRef.get().then(async snapshot => {
         if (!snapshot.exists) { 
             nameId = "peer1";
-            roomRef.set({
+            await roomRef.set({
                 names : [nameId]
             });
         } else {
             nameId = "peer" + (snapshot.data().names.length + 1);
-            roomRef.update({
+            await roomRef.update({
                 names: firebase.firestore.FieldValue.arrayUnion(nameId)
             });
         }
@@ -103,6 +98,8 @@ async function receiveAnswer(peerConnection, roomRef, peerId) {
 }
 
 function receiveStream(peerConnection, remoteEndpointID) {
+    document.querySelector('#localVideo').style.width 
+        = document.querySelector('#localVideo').style.width.slice(0,2) / 2 + "%";
     let peerNode = document.getElementById("localVideo").cloneNode();
     peerNode.id = remoteEndpointID; 
     document.getElementById("videos").appendChild(peerNode);
@@ -392,6 +389,7 @@ function init() {
     window.addEventListener('beforeunload', () => {
         document.getElementById('hangupBtn').click();
     });
+    document.querySelector('#localVideo').style.width = "99%"
 }
 
 init();

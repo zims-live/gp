@@ -4,6 +4,9 @@ body {
     font-family: Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
 }
 
 #message {
@@ -76,40 +79,44 @@ button {
 }
 
 div#videos {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    display = grid;
+    width = 100%;
+    /*height = 100%;*/
+    /*display: flex;*/
+    /*flex-direction: row;*/
+    /*flex-wrap: wrap;*/
+    /*margin: 1em;*/
 }
 
 div#videos > video {
     position: relative;
     background: black;
-    /*width: 640px;*/
+    /*max-width=100%;*/
     /*height: 100%;*/
-    display: block;
-    margin: 1em;
+    /*display: block;*/
     width: 100%;
+    /*max-width = 640px;*/
     height: auto;
 }
 
 /*.video-container {*/
-    /*position: absolute;*/
-    /*top: 0;*/
-    /*bottom: 0;*/
-    /*width: 100%;*/
-    /*height: 100%; */
-    /*overflow: hidden;*/
+/*position: absolute;*/
+/*top: 0;*/
+/*bottom: 0;*/
+/*width: 100%;*/
+/*height: 100%; */
+/*overflow: hidden;*/
 /*}*/
 /*.video-container video {*/
-    /*[> Make video to at least 100% wide and tall <]*/
+/*[> Make video to at least 100% wide and tall <]*/
 
-    /*[> Setting width & height to auto prevents the browser from stretching or squishing the video <]*/
+/*[> Setting width & height to auto prevents the browser from stretching or squishing the video <]*/
 
-    /*[> Center the video <]*/
-    /*position: absolute;*/
-    /*top: 50%;*/
-    /*left: 50%;*/
-    /*transform: translate(-50%,-50%);*/
+/*[> Center the video <]*/
+/*position: absolute;*/
+/*top: 50%;*/
+/*left: 50%;*/
+/*transform: translate(-50%,-50%);*/
 /*}*/
-            /*}*/
-        /*}*/
+/*}*/
+/*}*/
