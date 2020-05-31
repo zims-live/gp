@@ -14,8 +14,6 @@ const configuration = {
 let roomDialog = null;
 let nameId = null;
 
-//const unsubscribe = Array();
-
 async function createOffer(peerConnection) {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
@@ -191,27 +189,22 @@ async function peerRequestConnection(peerId, roomRef) {
     document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection1.close());
 
     closeConnection(peerConnection1, roomRef, peerId);
-    //restartConnection(peerConnection1, roomRef, peerId);
+
+    restartConnection(peerConnection1, roomRef, peerId);
 }
 
 function restartConnection(peerConnection, roomRef, peerId) {
     peerConnection.oniceconnectionstatechange = async function(event) {
-        if (peerConnection.iceConnectionState === "disconnected") {
-            const querySnapshot = await roomRef.collection('disconnected').where('disconnected', '==', peerId).get();
-            const disconnected = querySnapshot.docs.length == 0;
-
-            if (!disconnected) {
-                console.log('Restarting connection: ');
-                console.log(snapshot.data());
-                if (peerConnection.restartIce) {
-                    peerConnection.restartIce();
-                } else {
-                    peerConnection.createOffer({ iceRestart: true })
-                        .then(peerConnection.setLocalDescription)
-                        .then(async offer => {
-                            await sendOffer(offer, roomRef, peerId);
-                        });
-                }
+        if (peerConnection.iceConnectionState === "failed") {
+            console.log('Restarting connection with: ' + peerId);
+            if (peerConnection.restartIce) {
+                peerConnection.restartIce();
+            } else {
+                peerConnection.createOffer({ iceRestart: true })
+                    .then(peerConnection.setLocalDescription)
+                    .then(async offer => {
+                        await sendOffer(offer, roomRef, peerId);
+                    });
             }
         }
     }
@@ -238,6 +231,8 @@ async function peerAcceptConnection(peerId, roomRef) {
     document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection1.close());
 
     closeConnection(peerConnection1, roomRef, peerId);
+
+    restartConnection(peerConnection1, roomRef, peerId);
 }
 
 function registerPeerConnectionListeners(peerConnection) {
@@ -385,7 +380,7 @@ function hangUp() {
     //await roomRef.delete();
     //}
 
-    //document.location.reload(true);
+    document.location.reload(true);
 }
 
 function init() {
@@ -394,6 +389,9 @@ function init() {
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
     roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
+    window.addEventListener('beforeunload', () => {
+        document.getElementById('hangupBtn').click();
+    });
 }
 
 init();
