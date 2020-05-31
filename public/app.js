@@ -14,6 +14,8 @@ const configuration = {
 let roomDialog = null;
 let nameId = null;
 
+//const unsubscribe = Array();
+
 async function createOffer(peerConnection) {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
@@ -31,6 +33,12 @@ async function createAnswer(peerConnection) {
 function signalDisconnect(roomRef) {
     document.querySelector('#hangupBtn').addEventListener('click', () => {
         console.log("Disconnecting");
+
+        var unsubscribe = roomRef.onSnapshot(function() {
+        });
+
+        unsubscribe();
+
         roomRef.collection('disconnected').doc().set({
             disconnected: nameId
         });
@@ -120,9 +128,9 @@ function sendStream(peerConnection) {
 
 async function sendOffer(offer, roomRef, peerId) {
     const peerOffer = {
-            'offer': {
-                type: offer.type,
-                sdp: offer.sdp,
+        'offer': {
+            type: offer.type,
+            sdp: offer.sdp,
         },
     };
     await roomRef.collection(peerId).doc('SDP').collection('offer').doc(nameId).set(peerOffer);
@@ -130,10 +138,10 @@ async function sendOffer(offer, roomRef, peerId) {
 
 async function sendAnswer(answer, roomRef, peerId) {
     const peerAnswer = {
-            'answer': {
-                type: answer.type,
-                sdp: answer.sdp,
-            },
+        'answer': {
+            type: answer.type,
+            sdp: answer.sdp,
+        },
     };
     await roomRef.collection(peerId).doc('SDP').collection('answer').doc(nameId).set(peerAnswer);
 }
@@ -271,7 +279,6 @@ async function createRoom() {
     });
 
     signalDisconnect(roomRef);
-
     console.log(`Room ID: ${roomRef.id}`);
     document.querySelector(
         '#currentRoom').innerText = `Current room is ${roomRef.id} - You are the ${nameId}!`;
