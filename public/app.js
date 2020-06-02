@@ -15,6 +15,25 @@ let roomDialog = null;
 let nameId = null;
 let numberOfDisplayedStreams = 1;
 let numberOfConnectedPeers = 0;
+let muteState = false;
+
+function muteToggle() {
+    document.querySelector('#muteButton').addEventListener('click', () => {
+        if (!muteState) {
+            console.log("Muting");
+            muteState = true;
+            document.getElementById("localVideo").srcObject.getAudioTracks()[0].enabled = false;
+            document.querySelector('#muteButton span').innerText = "Unmute";
+            document.querySelector('#muteButton i').innerText = "volume_up";
+        } else {
+            console.log("Unmuting");
+            muteState = false;
+            document.getElementById("localVideo").srcObject.getAudioTracks()[0].enabled = true;
+            document.querySelector('#muteButton span').innerText = "Mute";
+            document.querySelector('#muteButton i').innerText = "volume_off";
+        }
+    });
+}
 
 async function createOffer(peerConnection) {
     const offer = await peerConnection.createOffer();
@@ -290,6 +309,7 @@ function registerPeerConnectionListeners(peerConnection) {
 async function createRoom() {
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#shareButton').disabled = false;
+    document.querySelector('#muteButton').disabled = false;
     document.querySelector('#joinBtn').disabled = true;
     const db = firebase.firestore();
     const roomRef = await db.collection('rooms').doc();
@@ -345,6 +365,8 @@ async function joinRoomById(roomId) {
         document.querySelector('#shareButton').disabled = false;
         document.querySelector('#createBtn').disabled = true;
         document.querySelector('#joinBtn').disabled = true;
+        document.querySelector('#muteButton').disabled = false;
+
         await addUserToRoom(roomRef);
 
         console.log('Join room: ', roomId);
@@ -430,6 +452,7 @@ function init() {
     window.onunload = window.onbeforeunload = () => {
         document.getElementById('hangupBtn').click();
     };
+    muteToggle();
 }
 
 init();
