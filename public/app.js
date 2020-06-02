@@ -39,9 +39,11 @@ function mutePeerToggleEnable(peerId) {
     document.getElementById(peerId).addEventListener('click', () => {
         const state = document.getElementById(peerId).muted;
         if (!state) {
-            console.log("Muting: " + peerId);    
+            console.log("Muting: " + peerId);
+            document.getElementById(peerId).classList.add("mutedPeers");
         } else {
             console.log("Unmuting: " + peerId);    
+            document.getElementById(peerId).classList.remove("mutedPeers");
         }
         document.getElementById(peerId).muted = !state;
     }, false);

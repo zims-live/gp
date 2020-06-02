@@ -96,3 +96,9 @@ div#videos {
     /*height: auto;*/
     background: black;
 }
+
+.mutedPeers {
+    /*border: 1px;*/
+    border: 1px solid black;
+    overflow: hidden;
+}
