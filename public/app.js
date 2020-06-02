@@ -142,8 +142,10 @@ function receiveStream(peerConnection, remoteEndpointID) {
 
     document.getElementById("videos").appendChild(peerNode);
 
+    //document.getElementById(remoteEndpointID).removeAttribute("autoplay");
+    //document.getElementById(remoteEndpointID).removeAttribute("muted");
+
     document.getElementById(remoteEndpointID).srcObject = new MediaStream();
-    document.getElementById(remoteEndpointID).muted = false;
 
     peerConnection.addEventListener('track', event => {
         console.log('Got remote track:', event.streams[0]);
@@ -152,6 +154,8 @@ function receiveStream(peerConnection, remoteEndpointID) {
             document.querySelector("#" + remoteEndpointID).srcObject.addTrack(track);
         });
     });
+
+    //document.getElementById(remoteEndpointID).play();
 
     mutePeerToggleEnable(remoteEndpointID);
 }
@@ -465,9 +469,13 @@ function init() {
     document.querySelector('#hangupBtn').addEventListener('click', hangUp);
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
-    window.onunload = window.onbeforeunload = () => {
+
+    var iOS = ['iPad', 'iPhone', 'iPod'].indexOf(navigator.platform) >= 0;
+    var eventName = iOS ? 'pagehide' : 'beforeunload';
+
+    window.addEventListener(eventName, function (event) {
         document.getElementById('hangupBtn').click();
-    };
+    });
     muteToggleEnable();
 }
 
