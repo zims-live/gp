@@ -409,7 +409,7 @@ function hangUp() {
     document.querySelector('#hangupBtn').disabled = true;
     document.querySelector('#currentRoom').innerText = '';
 
-    document.location.reload(true);
+    document.location.href = "https://fir-rtc-9bbb9.web.app";
 }
 
 function init() {
