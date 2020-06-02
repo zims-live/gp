@@ -17,7 +17,7 @@ let numberOfDisplayedStreams = 1;
 let numberOfConnectedPeers = 0;
 let muteState = false;
 
-function muteToggle() {
+function muteToggleEnable() {
     document.querySelector('#muteButton').addEventListener('click', () => {
         if (!muteState) {
             console.log("Muting");
@@ -33,6 +33,18 @@ function muteToggle() {
             document.querySelector('#muteButton i').innerText = "volume_off";
         }
     });
+}
+
+function mutePeerToggleEnable(peerId) {
+    document.getElementById(peerId).addEventListener('click', () => {
+        const state = document.getElementById(peerId).muted;
+        if (!state) {
+            console.log("Muting: " + peerId);    
+        } else {
+            console.log("Unmuting: " + peerId);    
+        }
+        document.getElementById(peerId).muted = !state;
+    }, false);
 }
 
 async function createOffer(peerConnection) {
@@ -138,6 +150,8 @@ function receiveStream(peerConnection, remoteEndpointID) {
             document.querySelector("#" + remoteEndpointID).srcObject.addTrack(track);
         });
     });
+
+    mutePeerToggleEnable(remoteEndpointID);
 }
 
 function sendStream(peerConnection) {
@@ -452,7 +466,7 @@ function init() {
     window.onunload = window.onbeforeunload = () => {
         document.getElementById('hangupBtn').click();
     };
-    muteToggle();
+    muteToggleEnable();
 }
 
 init();
