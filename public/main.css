@@ -87,11 +87,12 @@ div#videos {
     width: 100%;
     height: auto;
     position: relative;
+    display: block;
     overflow: hidden;
 }
 
 .video-box video {
     width: 100%;
-    height: auto;
+    /*height: auto;*/
     background: black;
 }
