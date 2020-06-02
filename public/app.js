@@ -332,7 +332,7 @@ async function createRoom() {
 
     document.querySelector('#shareButton').onclick = () => {
         window.open(
-            `https://api.whatsapp.com/send?text=https://fir-rtc-9bbb9.web.app?roomId=${roomRef.id}`,
+            `https://api.whatsapp.com/send?text=${window.location.href.split('?')[0]}?roomId=${roomRef.id}`,
             "_blank"
         )
     };
@@ -373,7 +373,7 @@ async function joinRoomById(roomId) {
     if (roomSnapshot.exists) {
         document.querySelector('#shareButton').onclick = () => {
             window.open(
-                `https://api.whatsapp.com/send?text=https://fir-rtc-9bbb9.web.app?roomId=${roomRef.id}`,
+                `https://api.whatsapp.com/send?text=${window.location.href.split('?')[0]}?roomId=${roomRef.id}`,
                 "_blank"
             )
         };
@@ -447,7 +447,7 @@ function hangUp() {
     document.querySelector('#hangupBtn').disabled = true;
     document.querySelector('#currentRoom').innerText = '';
 
-    document.location.href = "https://fir-rtc-9bbb9.web.app";
+    document.location.href = window.location.href.split('?')[0];
 }
 
 function init() {
