@@ -14,7 +14,6 @@ const configuration = {
 let roomDialog = null;
 let nameId = null;
 let numberOfDisplayedStreams = 1;
-let numberOfConnectedPeers = 0;
 let muteState = false;
 
 function muteToggleEnable() {
@@ -131,10 +130,7 @@ async function receiveAnswer(peerConnection, roomRef, peerId) {
 }
 
 function receiveStream(peerConnection, remoteEndpointID) {
-    numberOfDisplayedStreams = (numberOfDisplayedStreams == 3) ? 3: numberOfDisplayedStreams + 1;
-    numberOfConnectedPeers += 1;
-
-    document.getElementById("videos").style.columns = numberOfDisplayedStreams;
+    document.documentElement.style.setProperty("--colNum", (++numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
 
     const peerNode = document.getElementsByClassName('video-box')[0].cloneNode();
     peerNode.appendChild(document.getElementById('localVideo').cloneNode());
@@ -204,9 +200,7 @@ function closeConnection(peerConnection, roomRef, peerId) {
                 document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection.close();    
                 document.getElementById(peerId).remove();
-                numberOfConnectedPeers -= 1;
-                numberOfDisplayedStreams = (numberOfConnectedPeers < 2) ? numberOfDisplayedStreams - 1 : 3;
-                document.getElementById("videos").style.columns = numberOfDisplayedStreams;
+                document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
             }
         });
     });
@@ -240,9 +234,7 @@ async function peerRequestConnection(peerId, roomRef) {
                 document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection1.close();    
                 document.getElementById(peerId).remove();
-                numberOfConnectedPeers -= 1;
-                numberOfDisplayedStreams = (numberOfConnectedPeers < 2) ? numberOfDisplayedStreams - 1 : 3;
-                document.getElementById("videos").style.columns = numberOfDisplayedStreams;
+                document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
                 break;
         }
     }
@@ -295,9 +287,7 @@ async function peerAcceptConnection(peerId, roomRef) {
                 document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection1.close();    
                 document.getElementById(peerId).remove();
-                numberOfConnectedPeers -= 1;
-                numberOfDisplayedStreams = (numberOfConnectedPeers < 2) ? numberOfDisplayedStreams - 1 : 3;
-                document.getElementById("videos").style.columns = numberOfDisplayedStreams;
+                document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
                 break;
         }
     }

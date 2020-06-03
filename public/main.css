@@ -1,3 +1,8 @@
+:root {
+    --colNum: 1;
+    --rowNum: 1;
+}
+
 body {
     background: #ECEFF1;
     color: rgba(0, 0, 0, 0.87);
@@ -87,8 +92,8 @@ div#videos {
     /*grid-template-columns: repeat(auto-fit, 202px));*/
     /*grid-template-columns: repeat(autofit, minimax(200px, 1fr));*/
 
-    grid-template-columns: repeat(auto-fit, minmax(25%, 1fr));
-    grid-auto-rows: 1fr;
+    grid-template-columns: repeat(var(--colNum), 1fr);
+    grid-template-columns: repeat(var(--rowNum), 1fr);
     grid-gap: 4px;
 
     /*grid-auto-columns: 1fr;*/
