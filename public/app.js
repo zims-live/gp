@@ -425,13 +425,12 @@ async function joinRoomById(roomId) {
     }
 }
 
-async function openUserMedia(e) {
+async function openUserMedia() {
     const stream = await navigator.mediaDevices.getUserMedia(
         {video: true, audio: true});
     document.querySelector('#localVideo').srcObject = stream;
 
     console.log('Stream:', document.querySelector('#localVideo').srcObject);
-    document.querySelector('#cameraBtn').disabled = true;
     document.querySelector('#joinBtn').disabled = false;
     document.querySelector('#createBtn').disabled = false;
     document.querySelector('#hangupBtn').disabled = false;
@@ -444,7 +443,6 @@ function hangUp() {
     });
 
     document.querySelector('#localVideo').srcObject = null;
-    document.querySelector('#cameraBtn').disabled = false;
     document.querySelector('#joinBtn').disabled = true;
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#hangupBtn').disabled = true;
@@ -454,17 +452,18 @@ function hangUp() {
 }
 
 function init() {
+
+    openUserMedia();
+
     params = new URLSearchParams(location.search);
     roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
 
     if (params.get('roomId')) {
         console.log('Done');
         document.querySelector('#room-id').value = params.get('roomId');
-        openUserMedia();
         joinRoom();
     }
 
-    document.querySelector('#cameraBtn').addEventListener('click', openUserMedia);
     document.querySelector('#hangupBtn').addEventListener('click', hangUp);
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
