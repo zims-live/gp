@@ -33,20 +33,6 @@ function muteToggleEnable() {
     });
 }
 
-function mutePeerToggleEnable(peerId) {
-    document.getElementById(peerId).addEventListener('click', () => {
-        const state = document.getElementById(peerId).muted;
-        if (!state) {
-            console.log("Muting: " + peerId);
-            document.getElementById(peerId).classList.add("mutedPeers");
-        } else {
-            console.log("Unmuting: " + peerId);    
-            document.getElementById(peerId).classList.remove("mutedPeers");
-        }
-        document.getElementById(peerId).muted = !state;
-    }, false);
-}
-
 async function createOffer(peerConnection) {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
@@ -149,8 +135,6 @@ function receiveStream(peerConnection, remoteEndpointID) {
     });
 
     document.querySelector("#" + remoteEndpointID).muted = false;
-
-    mutePeerToggleEnable(remoteEndpointID);
 }
 
 

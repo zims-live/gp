@@ -129,11 +129,6 @@ button {
     /*object-fit: cover;*/
 /*}*/
 
-.mutedPeers {
-    border: 3px solid red;
-    overflow: hidden;
-}
-
 #videos {
     /*position: relative;*/
     display: grid;
