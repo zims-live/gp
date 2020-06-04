@@ -341,8 +341,6 @@ async function createRoom() {
 
     signalDisconnect(roomRef);
     console.log(`Room ID: ${roomRef.id}`);
-    document.querySelector(
-        '#currentRoom').innerText = `Current room is ${roomRef.id} - You are the ${nameId}!`;
 }
 
 function joinRoom() {
@@ -377,8 +375,6 @@ async function joinRoomById(roomId) {
         await addUserToRoom(roomRef);
 
         console.log('Join room: ', roomId);
-        document.querySelector(
-            '#currentRoom').innerText = `Current room is ${roomId} - You are ${nameId}!`;
 
         var removeOffer = function (peerId) {
             roomRef.collection(nameId).doc('SDP').update({
