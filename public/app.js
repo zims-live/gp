@@ -13,7 +13,6 @@ const configuration = {
 
 let roomDialog = null;
 let nameId = null;
-let numberOfDisplayedStreams = 1;
 let muteState = false;
 
 function muteToggleEnable() {
@@ -130,10 +129,10 @@ async function receiveAnswer(peerConnection, roomRef, peerId) {
 }
 
 function receiveStream(peerConnection, remoteEndpointID) {
-    //document.documentElement.style.setProperty("--colNum", (++numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
-
     const peerNode = document.getElementsByClassName('video-box')[0].cloneNode();
     peerNode.appendChild(document.getElementById('localVideo').cloneNode());
+    
+    peerNode.id = remoteEndpointID + "Container";
     peerNode.firstElementChild.id = remoteEndpointID;
 
     document.getElementById("videos").appendChild(peerNode);
@@ -199,8 +198,7 @@ function closeConnection(peerConnection, roomRef, peerId) {
             if (snapshot.exists) {
                 document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection.close();    
-                document.getElementById(peerId).remove();
-                //document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
+                document.getElementById(peerId + "Container").remove();
             }
         });
     });
@@ -233,8 +231,7 @@ async function peerRequestConnection(peerId, roomRef) {
             case "failed":
                 document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection1.close();    
-                document.getElementById(peerId).remove();
-                //document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
+                document.getElementById(peerId + "Container").remove();
                 break;
         }
     }
@@ -286,8 +283,7 @@ async function peerAcceptConnection(peerId, roomRef) {
             case "failed":
                 document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection1.close();    
-                document.getElementById(peerId).remove();
-                //document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
+                document.getElementById(peerId + "Container").remove();
                 break;
         }
     }

@@ -1,8 +1,3 @@
-/*:root {*/
-    /*--colNum: 1;*/
-    /*--rowNum: 1;*/
-/*}*/
-
 body {
     background: #ECEFF1;
     color: rgba(0, 0, 0, 0.87);
@@ -83,17 +78,15 @@ button {
 div#videos {
     position: relative;
     width: 100%;
-    height: 100%;
-    column-width: 31vw;
-    column-gap: 4px;
-}
 
-.video-box {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-auto-rows: 1fr;
+    grid-gap: 4px;
 }
 
 .video-box video {
     width: 100%;
-    height: 31vw;
     background: black;
     object-fit: cover;
 }
