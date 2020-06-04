@@ -130,7 +130,7 @@ async function receiveAnswer(peerConnection, roomRef, peerId) {
 }
 
 function receiveStream(peerConnection, remoteEndpointID) {
-    document.documentElement.style.setProperty("--colNum", (++numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
+    //document.documentElement.style.setProperty("--colNum", (++numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
 
     const peerNode = document.getElementsByClassName('video-box')[0].cloneNode();
     peerNode.appendChild(document.getElementById('localVideo').cloneNode());
@@ -200,7 +200,7 @@ function closeConnection(peerConnection, roomRef, peerId) {
                 document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection.close();    
                 document.getElementById(peerId).remove();
-                document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
+                //document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
             }
         });
     });
@@ -234,7 +234,7 @@ async function peerRequestConnection(peerId, roomRef) {
                 document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection1.close();    
                 document.getElementById(peerId).remove();
-                document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
+                //document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
                 break;
         }
     }
@@ -287,7 +287,7 @@ async function peerAcceptConnection(peerId, roomRef) {
                 document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection1.close();    
                 document.getElementById(peerId).remove();
-                document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
+                //document.documentElement.style.setProperty("--colNum", (--numberOfDisplayedStreams >= 3 ? 3: numberOfDisplayedStreams));
                 break;
         }
     }
