@@ -18,28 +18,37 @@
         <link rel="stylesheet" type="text/css" href="main.css">
     </head>
     <body>
-        <h1>Welcome to ZiMS!</h1>
         <div id="buttons">
-            <button class="mdc-button mdc-button--raised" disabled id="createBtn">
-                <i class="material-icons mdc-button__icon" aria-hidden="true">group_add</i>
-                <span class="mdc-button__label">Create room</span>
-            </button>
-            <button class="mdc-button mdc-button--raised" disabled id="joinBtn">
-                <i class="material-icons mdc-button__icon" aria-hidden="true">group</i>
-                <span class="mdc-button__label">Join room</span>
-            </button>
-            <button class="mdc-button mdc-button--raised" disabled id="hangupBtn">
-                <i class="material-icons mdc-button__icon" aria-hidden="true">close</i>
-                <span class="mdc-button__label">Hangup</span>
-            </button>
-            <button class="mdc-button mdc-button--raised" disabled id="shareButton" data-action="share/whatsapp/share">
-                <i class="material-icons mdc-button__icon" aria-hidden="true">share</i>
-                <span class="mdc-button__label">Invite</span>
-            </button>
-            <button class="mdc-button mdc-button--raised" disabled id="muteButton">
-                <i class="material-icons mdc-button__icon" aria-hidden="true">volume_off</i>
-                <span class="mdc-button__label">Mute</span>
-            </button>
+            <!--<div class="button-box">-->
+                <button class="mdc-button mdc-button--raised" id="createBtn">
+                    <i class="material-icons mdc-button__icon" aria-hidden="true">group_add</i>
+                    <span class="mdc-button__label">Create room</span>
+                </button>
+            <!--</div>-->
+            <!--<div class="button-box">-->
+                <button class="mdc-button mdc-button--raised" id="joinBtn">
+                    <i class="material-icons mdc-button__icon" aria-hidden="true">call</i>
+                    <span class="mdc-button__label">Join room</span>
+                </button>
+            <!--</div>-->
+            <!--<div class="button-box">-->
+                <button class="mdc-button mdc-button--raised hidden" id="hangupBtn">
+                    <i class="material-icons mdc-button__icon" aria-hidden="true">call_end</i>
+                    <span class="mdc-button__label">Hangup</span>
+                </button>
+            <!--</div>-->
+            <!--<div class="button-box">-->
+                <button class="mdc-button mdc-button--raised hidden" id="shareButton" data-action="share/whatsapp/share">
+                    <i class="material-icons mdc-button__icon" aria-hidden="true">add_ic_call</i>
+                    <span class="mdc-button__label">Invite</span>
+                </button>
+            <!--</div>-->
+            <!--<div class="button-box">-->
+                <button class="mdc-button mdc-button--raised hidden" id="muteButton">
+                    <i class="material-icons mdc-button__icon" aria-hidden="true">volume_off</i>
+                    <span class="mdc-button__label">Mute</span>
+                </button>
+            <!--</div>-->
         </div>
         <div>
             <span id="currentRoom"></span>

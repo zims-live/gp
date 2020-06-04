@@ -1,9 +1,40 @@
+html {
+    height: 100%;
+}
+
+:hover #buttons {
+    bottom: 5vh;
+}
+
+.hidden {
+    display: none;
+}
+
+#buttons {
+    display: flex;
+    transition: bottom 0.5s;
+    left: 35vw;
+    right: 35vw;
+    position: fixed;
+    z-index: 1;
+    bottom: -10vh;
+    align-items: center;
+    justify-content: space-around;
+}
+
+@media (max-width: 600px) {
+    #buttons button span {
+        display: none;
+    }
+}
+
 body {
     background: #ECEFF1;
     color: rgba(0, 0, 0, 0.87);
     font-family: Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 0;
+    height: 80vh;
 }
 
 #message {
@@ -78,9 +109,9 @@ button {
 div#videos {
     position: relative;
     width: 100%;
-
+    height: 100%;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(25%, 1fr));
     grid-auto-rows: 1fr;
     grid-gap: 4px;
 }

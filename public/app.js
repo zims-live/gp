@@ -312,10 +312,11 @@ function registerPeerConnectionListeners(peerConnection) {
 }
 
 async function createRoom() {
-    document.querySelector('#createBtn').disabled = true;
-    document.querySelector('#shareButton').disabled = false;
-    document.querySelector('#muteButton').disabled = false;
-    document.querySelector('#joinBtn').disabled = true;
+    document.querySelector('#hangupBtn').classList.remove("hidden");
+    document.querySelector('#createBtn').classList.add("hidden");
+    document.querySelector('#shareButton').classList.remove("hidden");
+    document.querySelector('#muteButton').classList.remove("hidden");
+    document.querySelector('#joinBtn').classList.add("hidden");
     const db = firebase.firestore();
     const roomRef = await db.collection('rooms').doc();
 
@@ -360,6 +361,7 @@ async function joinRoomById(roomId) {
     console.log('Got room:', roomSnapshot.exists);
 
     if (roomSnapshot.exists) {
+        document.querySelector('#hangupBtn').classList.remove("hidden");
         document.querySelector('#shareButton').onclick = () => {
             window.open(
                 `https://api.whatsapp.com/send?text=${window.location.href.split('?')[0]}?roomId=${roomRef.id}`,
@@ -367,10 +369,10 @@ async function joinRoomById(roomId) {
             )
         };
 
-        document.querySelector('#shareButton').disabled = false;
-        document.querySelector('#createBtn').disabled = true;
-        document.querySelector('#joinBtn').disabled = true;
-        document.querySelector('#muteButton').disabled = false;
+        document.querySelector('#shareButton').classList.remove("hidden");
+        document.querySelector('#createBtn').classList.add("hidden");
+        document.querySelector('#joinBtn').classList.add("hidden");
+        document.querySelector('#muteButton').classList.remove("hidden");
 
         await addUserToRoom(roomRef);
 
@@ -417,9 +419,8 @@ async function openUserMedia() {
     document.querySelector('#localVideo').srcObject = stream;
 
     console.log('Stream:', document.querySelector('#localVideo').srcObject);
-    document.querySelector('#joinBtn').disabled = false;
-    document.querySelector('#createBtn').disabled = false;
-    document.querySelector('#hangupBtn').disabled = false;
+    document.querySelector('#joinBtn').classList.remove("hidden");
+    document.querySelector('#createBtn').classList.remove("hidden");
 }
 
 function hangUp() {
@@ -429,9 +430,9 @@ function hangUp() {
     });
 
     document.querySelector('#localVideo').srcObject = null;
-    document.querySelector('#joinBtn').disabled = true;
-    document.querySelector('#createBtn').disabled = true;
-    document.querySelector('#hangupBtn').disabled = true;
+    //document.querySelector('#joinBtn').classList.add("hidden");
+    //document.querySelector('#createBtn').classList.add("hidden");
+    //document.querySelector('#hangupBtn').classList.add("hidden");
     document.querySelector('#currentRoom').innerText = '';
 
     document.location.href = window.location.href.split('?')[0];
