@@ -88,26 +88,16 @@ button {
 div#videos {
     position: relative;
     width: 100%;
-    height: auto;
-    columns: 1;
-    column-gap: 4px;
-    overflow: hidden;
-}
 
-.video-box {
-    /*width: 100%;*/
-    /*height: auto;*/
-    /*position: relative;*/
-    /*display:block;*/
-    /*overflow: hidden;*/
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-auto-rows: 1fr;
+    grid-gap: 4px;
 }
 
 .video-box video {
     width: 100%;
-    /*height: auto;*/
-    /*filter: grayscale(100%);*/
     background: black;
-    /*filter: blur(5px);*/
     object-fit: cover;
 }
 
