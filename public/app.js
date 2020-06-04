@@ -431,7 +431,6 @@ async function openUserMedia(e) {
     document.querySelector('#localVideo').srcObject = stream;
 
     console.log('Stream:', document.querySelector('#localVideo').srcObject);
-    document.querySelector('#cameraBtn').disabled = true;
     document.querySelector('#joinBtn').disabled = false;
     document.querySelector('#createBtn').disabled = false;
     document.querySelector('#hangupBtn').disabled = false;
@@ -444,7 +443,6 @@ function hangUp() {
     });
 
     document.querySelector('#localVideo').srcObject = null;
-    document.querySelector('#cameraBtn').disabled = false;
     document.querySelector('#joinBtn').disabled = true;
     document.querySelector('#createBtn').disabled = true;
     document.querySelector('#hangupBtn').disabled = true;
@@ -454,6 +452,8 @@ function hangUp() {
 }
 
 function init() {
+    openUserMedia();
+
     params = new URLSearchParams(location.search);
     roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
 
@@ -464,7 +464,7 @@ function init() {
         joinRoom();
     }
 
-    document.querySelector('#cameraBtn').addEventListener('click', openUserMedia);
+    happyBirthDayMessage();
     document.querySelector('#hangupBtn').addEventListener('click', hangUp);
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
@@ -476,6 +476,20 @@ function init() {
         document.getElementById('hangupBtn').click();
     });
     muteToggleEnable();
+}
+
+function happyBirthDayMessage() {
+    document.getElementById('mainHeader').onclick = () => {
+        if (!document.getElementById('mainHeader').classList.contains('secret_msg')) {
+            document.getElementById('mainHeader').classList.add('secret_msg'); 
+            document.getElementById('mainHeader').innerText = "Happy Birthday Meezu!"
+            document.body.classList.add('gif_bg');
+        } else {
+            document.getElementById('mainHeader').classList.remove('secret_msg'); 
+            document.getElementById('mainHeader').innerText = "Welcome to ZiMS!"
+            document.body.classList.remove('gif_bg');
+        }
+    };
 }
 
 init();
