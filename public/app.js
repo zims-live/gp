@@ -418,9 +418,15 @@ function hangUp() {
     document.location.href = window.location.href.split('?')[0];
 }
 
+function hideNavBarOnTap() {
+    document.addEventListener("click", () => { 
+        document.getElementById("buttons").classList.add("unhover");
+    });
+}
+
 function init() {
 
-    openUserMedia();
+    openUserMedia()
 
     params = new URLSearchParams(location.search);
     roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
@@ -434,6 +440,7 @@ function init() {
     document.querySelector('#hangupBtn').addEventListener('click', hangUp);
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
+    hideNavBarOnTap();
 
     var iOS = ['iPad', 'iPhone', 'iPod'].indexOf(navigator.platform) >= 0;
     var eventName = iOS ? 'pagehide' : 'beforeunload';
