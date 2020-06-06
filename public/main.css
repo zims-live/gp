@@ -155,6 +155,8 @@ body {
     width: 100%;
     height: 100%;
     background: grey;
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
 }
 
 @media (orientation: portrait) {
@@ -183,17 +185,17 @@ body {
 
     .four_cell {
         grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(2, 44vh);
+        grid-template-rows: repeat(3, 28vh);
     }
 
     .nine_cell {
         grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(2, 44vh);
+        grid-template-rows: repeat(3, 28vh);
     }
 
     .sixteen_cell {
         grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(2, 44vh);
+        grid-template-rows: repeat(3, 28vh);
     }
 }
 

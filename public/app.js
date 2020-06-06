@@ -22,12 +22,12 @@ function muteToggleEnable() {
             console.log("Muting");
             muteState = true;
             document.getElementById("localVideo").srcObject.getAudioTracks()[0].enabled = false;
-            document.querySelector('#muteButton').innerText = "volume_up";
+            document.querySelector('#muteButton').innerText = "volume_off";
         } else {
             console.log("Unmuting");
             muteState = false;
             document.getElementById("localVideo").srcObject.getAudioTracks()[0].enabled = true;
-            document.querySelector('#muteButton').innerText = "volume_off";
+            document.querySelector('#muteButton').innerText = "volume_up";
         }
     });
 }
@@ -56,8 +56,6 @@ function signalHangup(roomRef) {
             disconnected: nameId
         });
     });
-
-
 }
 
 function signalICECandidates(peerConnection, roomRef, peerId) {
@@ -427,7 +425,7 @@ function init() {
     hideNavBarOnTap();
 
     var iOS = ['iPad', 'iPhone', 'iPod'].indexOf(navigator.platform) >= 0;
-    var eventName = iOS ? 'pagehide' : 'beforeunload';
+    var eventName = iOS ? 'onpagehide' : 'onbeforeunload';
 
     window.onunload = window[eventName] = () => {
         document.getElementById('hangupBtn').click();
