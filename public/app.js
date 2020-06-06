@@ -36,6 +36,7 @@ async function createOffer(peerConnection) {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
     console.log('Created offer:', offer);
+    offer.sdp = preferCodec(offer.sdp, "h264");
     return offer;
 }
 
@@ -43,6 +44,7 @@ async function createAnswer(peerConnection) {
     const answer = await peerConnection.createAnswer();
     console.log('Created answer:', answer);
     await peerConnection.setLocalDescription(answer);
+    answer.sdp = preferCodec(answer.sdp, "h264");
     return answer
 }
 
