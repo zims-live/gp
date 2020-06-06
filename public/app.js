@@ -1,4 +1,4 @@
-mdc.ripple.MDCRipple.attachTo(document.querySelector('.mdc-button'));
+mdc.ripple.MDCRipple.attachTo(document.querySelector('.mdc-icon-button'));
 const configuration = {
     iceServers: [
         {
@@ -14,6 +14,7 @@ const configuration = {
 let roomDialog = null;
 let nameId = null;
 let muteState = false;
+let numberOfDisplayedPeers = 1;
 
 function muteToggleEnable() {
     document.querySelector('#muteButton').addEventListener('click', () => {
@@ -21,14 +22,12 @@ function muteToggleEnable() {
             console.log("Muting");
             muteState = true;
             document.getElementById("localVideo").srcObject.getAudioTracks()[0].enabled = false;
-            document.querySelector('#muteButton span').innerText = "Unmute";
-            document.querySelector('#muteButton i').innerText = "volume_up";
+            document.querySelector('#muteButton').innerText = "volume_up";
         } else {
             console.log("Unmuting");
             muteState = false;
             document.getElementById("localVideo").srcObject.getAudioTracks()[0].enabled = true;
-            document.querySelector('#muteButton span').innerText = "Mute";
-            document.querySelector('#muteButton i').innerText = "volume_off";
+            document.querySelector('#muteButton').innerText = "volume_off";
         }
     });
 }
@@ -47,7 +46,7 @@ async function createAnswer(peerConnection) {
     return answer
 }
 
-function signalDisconnect(roomRef) {
+function signalHangup(roomRef) {
     document.querySelector('#hangupBtn').addEventListener('click', async () => {
         console.log("Disconnecting");
 
@@ -55,6 +54,8 @@ function signalDisconnect(roomRef) {
             disconnected: nameId
         });
     });
+
+
 }
 
 function signalICECandidates(peerConnection, roomRef, peerId) {
@@ -65,7 +66,7 @@ function signalICECandidates(peerConnection, roomRef, peerId) {
             return;
         }
         console.log('Got candidate: ', event.candidate);
-        const candidateDocRef = callerCandidatesCollection.add(event.candidate.toJSON()).then(docRef => {
+        callerCandidatesCollection.add(event.candidate.toJSON()).then(docRef => {
             docRef.update({
                 name: peerId
             })
@@ -115,26 +116,25 @@ async function receiveAnswer(peerConnection, roomRef, peerId) {
 }
 
 function receiveStream(peerConnection, remoteEndpointID) {
-    const peerNode = document.getElementsByClassName('video-box')[0].cloneNode();
-    peerNode.appendChild(document.getElementById('localVideo').cloneNode());
+    //const peerNode = document.getElementsByClassName('video-box')[0].cloneNode();
+    //peerNode.appendChild(document.getElementById('localVideo').cloneNode());
+
+    //peerNode.id = remoteEndpointID + "Container";
+    //peerNode.firstElementChild.id = remoteEndpointID;
+
+    //document.getElementById("videos").appendChild(peerNode);
+
+    //document.getElementById(remoteEndpointID).srcObject = new MediaStream();
     
-    peerNode.id = remoteEndpointID + "Container";
-    peerNode.firstElementChild.id = remoteEndpointID;
-
-    document.getElementById("videos").appendChild(peerNode);
-
-    document.getElementById(remoteEndpointID).srcObject = new MediaStream();
+    createPeerVideo(remoteEndpointID);
 
     peerConnection.addEventListener('track', event => {
         console.log('Got remote track:', event.streams[0]);
-        //event.streams[0].getTracks().forEach(track => {
-        //console.log('Add a track to the remoteStream:', track);
-        //document.querySelector("#" + remoteEndpointID).srcObject.addTrack(track);
-        //});
         document.querySelector("#" + remoteEndpointID).srcObject = event.streams[0];
     });
 
     document.querySelector("#" + remoteEndpointID).muted = false;
+    enforceGridRules(++numberOfDisplayedPeers);
 }
 
 
@@ -180,51 +180,74 @@ function closeConnection(peerConnection, roomRef, peerId) {
     roomRef.collection('disconnected').where('disconnected', '==', peerId).onSnapshot(querySnapshot => {
         querySnapshot.forEach(snapshot => {
             if (snapshot.exists) {
-                document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
                 peerConnection.close();    
                 document.getElementById(peerId + "Container").remove();
+                enforceGridRules(--numberOfDisplayedPeers);
             }
         });
     });
+
+    peerConnection.onconnectionstatechange = function() {
+        if (peerConnection.connectionState == "failed") {
+                peerConnection.close();    
+                document.getElementById(peerId + "Container").remove();
+                enforceGridRules(--numberOfDisplayedPeers);
+        }
+    }
 }
 
 async function peerRequestConnection(peerId, roomRef) {
     console.log('Create PeerConnection with configuration: ', configuration);
-    const peerConnection1 = new RTCPeerConnection(configuration);
+    const peerConnection = new RTCPeerConnection(configuration);
 
-    registerPeerConnectionListeners(peerConnection1);
-    sendStream(peerConnection1)
+    registerPeerConnectionListeners(peerConnection);
+    sendStream(peerConnection)
 
-    signalICECandidates(peerConnection1, roomRef, peerId);
-    const offer = await createOffer(peerConnection1);
+    signalICECandidates(peerConnection, roomRef, peerId);
+    const offer = await createOffer(peerConnection);
 
     await sendOffer(offer, roomRef, peerId);
 
-    receiveStream(peerConnection1, peerId);
+    receiveStream(peerConnection, peerId);
 
-    await receiveAnswer(peerConnection1, roomRef, peerId); 
+    await receiveAnswer(peerConnection, roomRef, peerId); 
 
-    await receiveICECandidates(peerConnection1, roomRef, peerId);
+    await receiveICECandidates(peerConnection, roomRef, peerId);
 
-    document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection1.close());
+    document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection.close());
 
-    closeConnection(peerConnection1, roomRef, peerId);
+    closeConnection(peerConnection, roomRef, peerId);
+    
+    restartConnection(peerConnection, roomRef, peerId);
+}
 
-    peerConnection1.onconnectionstatechange = function(event) {
-        switch(peerConnection1.connectionState) {
-            case "failed":
-                document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
-                peerConnection1.close();    
-                document.getElementById(peerId + "Container").remove();
-                break;
-        }
-    }
+async function peerAcceptConnection(peerId, roomRef) {
+    console.log('Create PeerConnection with configuration: ', configuration)
+    const peerConnection = new RTCPeerConnection(configuration);
+    registerPeerConnectionListeners(peerConnection);
+    sendStream(peerConnection);
 
-    restartConnection(peerConnection1, roomRef, peerId);
+    signalICECandidates(peerConnection, roomRef, peerId)
+
+    receiveStream(peerConnection, peerId);
+
+    await receiveOffer(peerConnection, roomRef, peerId);
+
+    const answer = await createAnswer(peerConnection);
+
+    await sendAnswer(answer, roomRef, peerId);
+
+    await receiveICECandidates(peerConnection, roomRef, peerId);
+
+    document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection.close());
+
+    closeConnection(peerConnection, roomRef, peerId);
+
+    restartConnection(peerConnection, roomRef, peerId);
 }
 
 function restartConnection(peerConnection, roomRef, peerId) {
-    peerConnection.oniceconnectionstatechange = async function(event) {
+    peerConnection.oniceconnectionstatechange = async function() {
         if (peerConnection.iceConnectionState === "failed") {
             console.log('Restarting connection with: ' + peerId);
             if (peerConnection.restartIce) {
@@ -240,40 +263,6 @@ function restartConnection(peerConnection, roomRef, peerId) {
     }
 }
 
-async function peerAcceptConnection(peerId, roomRef) {
-    console.log('Create PeerConnection with configuration: ', configuration)
-    const peerConnection1 = new RTCPeerConnection(configuration);
-    registerPeerConnectionListeners(peerConnection1);
-    sendStream(peerConnection1);
-
-    signalICECandidates(peerConnection1, roomRef, peerId)
-
-    receiveStream(peerConnection1, peerId);
-
-    await receiveOffer(peerConnection1, roomRef, peerId);
-
-    const answer = await createAnswer(peerConnection1);
-
-    await sendAnswer(answer, roomRef, peerId);
-
-    await receiveICECandidates(peerConnection1, roomRef, peerId);
-
-    document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection1.close());
-
-    closeConnection(peerConnection1, roomRef, peerId);
-
-    peerConnection1.onconnectionstatechange = function(event) {
-        switch(peerConnection1.connectionState) {
-            case "failed":
-                document.getElementById(peerId).srcObject.getTracks().forEach(track => track.stop());
-                peerConnection1.close();    
-                document.getElementById(peerId + "Container").remove();
-                break;
-        }
-    }
-
-    restartConnection(peerConnection1, roomRef, peerId);
-}
 
 function registerPeerConnectionListeners(peerConnection) {
     peerConnection.addEventListener('icegatheringstatechange', () => {
@@ -323,7 +312,7 @@ async function createRoom() {
         }
     });
 
-    signalDisconnect(roomRef);
+    signalHangup(roomRef);
     console.log(`Room ID: ${roomRef.id}`);
 }
 
@@ -360,12 +349,6 @@ async function joinRoomById(roomId) {
 
         console.log('Join room: ', roomId);
 
-        var removeOffer = function (peerId) {
-            roomRef.collection(nameId).doc('SDP').update({
-                [peerId] : firebase.firestore.FieldValue.delete()
-            })
-        }
-
         roomRef.collection(nameId).doc('SDP').collection('offer').onSnapshot(async snapshot => {
             await snapshot.docChanges().forEach(async change => {
                 if (change.type === 'added') {
@@ -386,7 +369,7 @@ async function joinRoomById(roomId) {
             }
         });
 
-        signalDisconnect(roomRef);
+        signalHangup(roomRef);
     } else {
         document.querySelector(
             '#currentRoom').innerText = `Room: ${roomId} - Doesn't exist!`;
@@ -409,10 +392,9 @@ function hangUp() {
         track.stop();
     });
 
-    document.querySelector('#localVideo').srcObject = null;
-    //document.querySelector('#joinBtn').classList.add("hidden");
-    //document.querySelector('#createBtn').classList.add("hidden");
-    //document.querySelector('#hangupBtn').classList.add("hidden");
+    document.querySelector('#joinBtn').classList.add("hidden");
+    document.querySelector('#createBtn').classList.add("hidden");
+    document.querySelector('#hangupBtn').classList.add("hidden");
     document.querySelector('#currentRoom').innerText = '';
 
     document.location.href = window.location.href.split('?')[0];
@@ -445,9 +427,9 @@ function init() {
     var iOS = ['iPad', 'iPhone', 'iPod'].indexOf(navigator.platform) >= 0;
     var eventName = iOS ? 'pagehide' : 'beforeunload';
 
-    window.addEventListener(eventName, function (event) {
+    window.onunload = window[eventName] = () => {
         document.getElementById('hangupBtn').click();
-    });
+    };
     muteToggleEnable();
 }
 

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-        <meta http-equiv="Pragma" content="no-cache" />
-        <meta http-equiv="Expires" content="0" />
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Welcome to ZiMS</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Expires" content="0">
+        <meta charset="utf-8">
         <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
         <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -22,88 +22,63 @@
     </head>
     <body>
         <div id="buttons">
-            <!--<div class="button-box">-->
-            <button class="mdc-button mdc-button--raised" id="createBtn">
-                <i class="material-icons mdc-button__icon" aria-hidden="true">group_add</i>
-                <span class="mdc-button__label">Create room</span>
-            </button>
-            <!--</div>-->
-            <!--<div class="button-box">-->
-            <button class="mdc-button mdc-button--raised" id="joinBtn">
-                <i class="material-icons mdc-button__icon" aria-hidden="true">call</i>
-                <span class="mdc-button__label">Join room</span>
-            </button>
-            <!--</div>-->
-            <!--<div class="button-box">-->
-            <button class="mdc-button mdc-button--raised hidden" id="hangupBtn">
-                <i class="material-icons mdc-button__icon" aria-hidden="true">call_end</i>
-                <span class="mdc-button__label">Hangup</span>
-            </button>
-            <!--</div>-->
-            <!--<div class="button-box">-->
-            <button class="mdc-button mdc-button--raised hidden" id="shareButton" data-action="share/whatsapp/share">
-                <i class="material-icons mdc-button__icon" aria-hidden="true">add_ic_call</i>
-                <span class="mdc-button__label">Invite</span>
-            </button>
-            <!--</div>-->
-            <!--<div class="button-box">-->
-            <button class="mdc-button mdc-button--raised hidden" id="muteButton">
-                <i class="material-icons mdc-button__icon" aria-hidden="true">volume_off</i>
-                <span class="mdc-button__label">Mute</span>
-            </button>
-            <!--</div>-->
+            <button class="mdc-icon-button material-icons" id="createBtn">group_add</button>
+            <button class="mdc-icon-button material-icons" id="joinBtn">call</button>
+            <button class="mdc-icon-button material-icons hidden" id="hangupBtn">call_end</button>
+            <button class="mdc-icon-button material-icons hidden" id="shareButton">add_ic_call</button>
+            <button class="mdc-icon-button material-icons hidden" id="muteButton">volume_off</button>
         </div>
         <div>
             <span id="currentRoom"></span>
         </div>
-        <div id="videos">
+        <div id="videos" class='single_cell'>
             <div class="video-box">
                 <video id="localVideo" muted autoplay playsinline></video>
             </div>
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
             <!--<div class="video-box">-->
-                <!--<video id="localVideo" muted autoplay playsinline></video>-->
+            <!--<video id="localVideo" muted autoplay playsinline></video>-->
             <!--</div>-->
         </div>
         <div class="mdc-dialog"
@@ -136,6 +111,7 @@
             </div>
             <div class="mdc-dialog__scrim"></div>
         </div>
+        <script src="style.js"></script>
         <script src="app.js"></script>
     </body>
 </html>
