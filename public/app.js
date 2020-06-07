@@ -14,7 +14,22 @@ const configuration = {
 let roomDialog = null;
 let nameId = null;
 let muteState = false;
+let videoState = true;
 let numberOfDisplayedPeers = 1;
+
+function videoToggleEnable () {
+    document.getElementById('videoButton').addEventListener('click', () => {
+        if (videoState) {
+            videoState = false;
+            document.getElementById('localVideo').srcObject.getVideoTracks()[0].enabled = false;
+            document.querySelector('#videoButton').innerText = "videocam_off";
+        } else {
+            videoState = true;
+            document.getElementById('localVideo').srcObject.getVideoTracks()[0].enabled = true;
+            document.querySelector('#videoButton').innerText = "videocam";
+        }
+    });
+}
 
 function muteToggleEnable() {
     document.querySelector('#muteButton').addEventListener('click', () => {
@@ -116,16 +131,6 @@ async function receiveAnswer(peerConnection, roomRef, peerId) {
 }
 
 function receiveStream(peerConnection, remoteEndpointID) {
-    //const peerNode = document.getElementsByClassName('video-box')[0].cloneNode();
-    //peerNode.appendChild(document.getElementById('localVideo').cloneNode());
-
-    //peerNode.id = remoteEndpointID + "Container";
-    //peerNode.firstElementChild.id = remoteEndpointID;
-
-    //document.getElementById("videos").appendChild(peerNode);
-
-    //document.getElementById(remoteEndpointID).srcObject = new MediaStream();
-    
     createPeerVideo(remoteEndpointID);
 
     peerConnection.addEventListener('track', event => {
@@ -431,6 +436,7 @@ function init() {
         document.getElementById('hangupBtn').click();
     };
     muteToggleEnable();
+    videoToggleEnable();
 }
 
 init();
