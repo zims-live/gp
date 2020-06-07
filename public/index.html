@@ -10,6 +10,7 @@
         <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
         <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 
         <!-- update the version number as needed -->
         <script defer src="/__/firebase/7.13.1/firebase-app.js"></script>
@@ -20,14 +21,14 @@
 
         <link rel="stylesheet" type="text/css" href="main.css">
     </head>
-    <body>
+    <body> 
         <div id="buttons">
-            <button class="mdc-icon-button material-icons" id="createBtn">group_add</button>
-            <button class="mdc-icon-button material-icons" id="joinBtn">call</button>
-            <button class="mdc-icon-button material-icons hidden" id="hangupBtn">call_end</button>
-            <button class="mdc-icon-button material-icons hidden" id="shareButton">add_ic_call</button>
-            <button class="mdc-icon-button material-icons hidden" id="muteButton">volume_up</button>
-            <button class="mdc-icon-button material-icons" id="videoButton">videocam</button>
+            <button class="material-icons btn btn-circle" id="createBtn">group_add</button>
+            <button class="material-icons btn btn-circle" id="joinBtn">call</button>
+            <button class="material-icons hidden btn btn-circle" id="hangupBtn">call_end</button>
+            <button class="material-icons hidden btn btn-circle" id="shareButton">add_ic_call</button>
+            <button class="material-icons hidden btn btn-circle" id="muteButton">mic</button>
+            <button class="material-icons btn btn-circle" id="videoButton">videocam</button>
         </div>
         <div>
             <span id="currentRoom"></span>
@@ -36,51 +37,6 @@
             <div class="video-box">
                 <video id="localVideo" muted autoplay playsinline></video>
             </div>
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
-            <!--<div class="video-box">-->
-            <!--<video id="localVideo" muted autoplay playsinline></video>-->
-            <!--</div>-->
         </div>
         <div class="mdc-dialog"
              id="room-dialog"

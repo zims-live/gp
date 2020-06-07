@@ -1,4 +1,4 @@
-mdc.ripple.MDCRipple.attachTo(document.querySelector('.mdc-icon-button'));
+//mdc.ripple.MDCRipple.attachTo(document.querySelector('.mdc-icon-button'));
 const configuration = {
     iceServers: [
         {
@@ -23,10 +23,12 @@ function videoToggleEnable () {
             videoState = false;
             document.getElementById('localVideo').srcObject.getVideoTracks()[0].enabled = false;
             document.querySelector('#videoButton').innerText = "videocam_off";
+            document.getElementById('videoButton').classList.add('toggle');
         } else {
             videoState = true;
             document.getElementById('localVideo').srcObject.getVideoTracks()[0].enabled = true;
             document.querySelector('#videoButton').innerText = "videocam";
+            document.querySelector('#videoButton').classList.remove('toggle');
         }
     });
 }
@@ -37,12 +39,14 @@ function muteToggleEnable() {
             console.log("Muting");
             muteState = true;
             document.getElementById("localVideo").srcObject.getAudioTracks()[0].enabled = false;
-            document.querySelector('#muteButton').innerText = "volume_off";
+            document.querySelector('#muteButton').innerText = "mic_off";
+            document.getElementById('muteButton').classList.add('toggle');
         } else {
             console.log("Unmuting");
             muteState = false;
             document.getElementById("localVideo").srcObject.getAudioTracks()[0].enabled = true;
-            document.querySelector('#muteButton').innerText = "volume_up";
+            document.querySelector('#muteButton').innerText = "mic";
+            document.getElementById('muteButton').classList.remove('toggle');
         }
     });
 }
@@ -402,7 +406,7 @@ function hangUp() {
     document.querySelector('#hangupBtn').classList.add("hidden");
     document.querySelector('#currentRoom').innerText = '';
 
-    document.location.href = window.location.href.split('?')[0];
+    window.location = window.location.pathname;
 }
 
 function hideNavBarOnTap() {
@@ -430,11 +434,11 @@ function init() {
     hideNavBarOnTap();
 
     var iOS = ['iPad', 'iPhone', 'iPod'].indexOf(navigator.platform) >= 0;
-    var eventName = iOS ? 'onpagehide' : 'onbeforeunload';
+    var eventName = iOS ? 'pagehide' : 'beforeunload';
 
-    window.onunload = window[eventName] = () => {
+    window.addEventListener(eventName, function() {
         document.getElementById('hangupBtn').click();
-    };
+    });
     muteToggleEnable();
     videoToggleEnable();
 }

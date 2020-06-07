@@ -133,16 +133,8 @@ body {
 
 @media (orientation: portrait) {
     #buttons {
-        left: 40vw;
-        right: 40vw;
-    }
-
-    #buttons button .mdc-button__label {
-        display: none;
-    }
-
-    #buttons button {
-        text-align: center;
+        left: 20vw;
+        right: 20vw;
     }
 
     .single_cell {
@@ -171,6 +163,38 @@ body {
     }
 }
 
-.mdc-icon-button {
-    color: blue; 
+#buttons button {
+    background-color: royalblue;
+}
+
+
+@media (hover: hover) {
+    #buttons button:hover {
+        background-color: lightblue; 
+    }
+}
+
+#buttons button:active {
+    background-color: lightblue;
+}
+
+.toggle {
+    background-color: blue !important;
+}
+
+.btn-circle {
+    width: 45px;
+    height: 45px;
+    line-height: 45px;
+    text-align: center;
+    padding: 0;
+    border-radius: 50%;
+}
+
+.material-icons {
+    color: white !important;
+}
+
+#hangupBtn {
+    background-color: red !important;
 }
