@@ -91,34 +91,6 @@ body {
     margin: 1em;
 }
 
-/*button {*/
-    /*margin: 0.2em 0.1em;*/
-/*}*/
-
-/*div#videos {*/
-/*position: relative;*/
-/*width: 100%;*/
-/*height: 100%;*/
-/*display: grid;*/
-/*grid-template-columns: repeat(auto-fit, minmax(20%, 1fr));*/
-/*grid-auto-rows: 1fr;*/
-/*grid-gap: 4px;*/
-/*}*/
-
-/*.video-box {*/
-/*display: block;*/
-/*height: 0;*/
-/*width: 100%;*/
-/*padding-bottom: calc(9/16 * 100%);*/
-/*}*/
-
-/*.video-box video {*/
-/*width: 100%;*/
-/*height: 100%;*/
-/*background: black;*/
-/*object-fit: cover;*/
-/*}*/
-
 #videos {
     position: relative;
     width: 100%;
