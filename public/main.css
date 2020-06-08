@@ -2,10 +2,6 @@
     bottom: 5vh;
 }
 
-.hidden {
-    display: none;
-}
-
 #buttons {
     display: flex;
     transition: bottom 0.5s;
@@ -164,31 +160,31 @@ body {
 }
 
 #buttons button {
-    background-color: royalblue;
+    background-color: green;
+    text-decoration: none;
 }
 
-
-@media (hover: hover) {
+@media not all and (pointer: coarse) {
     #buttons button:hover {
-        background-color: lightblue; 
+        background-color: lightgrey; 
+        box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
     }
 }
 
-#buttons button:active {
-    background-color: lightblue;
-}
-
 .toggle {
-    background-color: blue !important;
+    background-color: red !important;
 }
 
 .btn-circle {
+    border: none;
     width: 45px;
     height: 45px;
     line-height: 45px;
     text-align: center;
     padding: 0;
     border-radius: 50%;
+    outline: none;
+    border: none;
 }
 
 .material-icons {
@@ -196,5 +192,10 @@ body {
 }
 
 #hangupBtn {
-    background-color: red !important;
+    color : red !important;
 }
+
+.hidden {
+    display: none;
+}
+

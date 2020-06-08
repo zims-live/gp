@@ -1,4 +1,3 @@
-//mdc.ripple.MDCRipple.attachTo(document.querySelector('.mdc-icon-button'));
 const configuration = {
     iceServers: [
         {
@@ -401,10 +400,10 @@ function hangUp() {
         track.stop();
     });
 
-    document.querySelector('#joinBtn').classList.add("hidden");
-    document.querySelector('#createBtn').classList.add("hidden");
-    document.querySelector('#hangupBtn').classList.add("hidden");
-    document.querySelector('#currentRoom').innerText = '';
+    //document.querySelector('#joinBtn').classList.add("hidden");
+    //document.querySelector('#createBtn').classList.add("hidden");
+    //document.querySelector('#hangupBtn').classList.add("hidden");
+    //document.querySelector('#currentRoom').innerText = '';
 
     window.location = window.location.pathname;
 }
