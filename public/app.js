@@ -15,7 +15,7 @@ let nameId = null;
 let contentId = null;
 let muteState = false;
 let videoState = true;
-let contentState = false;
+var contentState = false;
 let numberOfDisplayedPeers = 1;
 let screenState = false;
 let cameraStream = null;
@@ -40,14 +40,21 @@ function videoToggleEnable() {
 
 
 async function signalContentShare(roomRef) {
-    contentId =  await addUserToRoom(roomRef);
+    await roomRef.get().then(async snapshot => {
+        contentId = "peer" + (snapshot.data().names.length + 1);
+        await roomRef.update({
+            names: firebase.firestore.FieldValue.arrayUnion(contentId)
+        });
+    });
+
+    console.log("Content id is" + contentId);
 
     roomRef.collection(contentId).doc('SDP').collection('offer').onSnapshot(async snapshot => {
         await snapshot.docChanges().forEach(async change => {
             if (change.type === 'added') {
                 peerId = change.doc.id;
                 const peerConnection = new RTCPeerConnection(configuration);
-                sendStream(peerConnection);
+                sendStream(peerConnection, captureStream);
                 signalICECandidates(peerConnection, roomRef, peerId, contentId)
                 await receiveOffer(peerConnection, roomRef, peerId, contentId);
                 const answer = await createAnswer(peerConnection);
@@ -64,9 +71,16 @@ async function signalContentShare(roomRef) {
     roomRef.onSnapshot(async snapshot => {
         const peers = snapshot.data().names
         console.log("Current peers: " + peers);
-        if (peers[peers.length - 1] != contentId && peers[peers.length - 1] != nameId) {
-            console.log('Sending request to: ' + peers[peers.length - 1]);
-            await peerRequestConnection(peers[peers.length - 1], roomRef, contentId);
+        if (peers[peers.length - 1] != contentId) {
+            const peerConnection = new RTCPeerConnection(configuration);
+            sendStream(peerConnection, captureStream)
+            signalICECandidates(peerConnection, roomRef, peerId, nameId);
+            const offer = await createOffer(peerConnection);
+            await sendOffer(offer, roomRef, peerId, nameId);
+            await receiveAnswer(peerConnection, roomRef, peerId, nameId); 
+            await receiveICECandidates(peerConnection, roomRef, peerId, nameId);
+            document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection.close());
+            restartConnection(peerConnection, roomRef, peerId);
         }
     });
 }
@@ -90,9 +104,6 @@ async function contentToggleButton(roomRef, peerConnection) {
         await signalContentShare(roomRef);
     } else {
         stopCapture(captureStream); 
-
-        contentId = null;
-
         localStream = cameraStream;
         await roomRef.collection('disconnected').doc().set({
             disconnected: contentId
@@ -100,6 +111,7 @@ async function contentToggleButton(roomRef, peerConnection) {
         screenState = false;
         document.getElementById('screenShareButton').innerText = 'screen_share';
         document.getElementById('screenShareButton').classList.remove('toggle');
+        contentId = null;
     }
 }
 
@@ -224,7 +236,6 @@ async function addUserToRoom(roomRef) {
                 names: firebase.firestore.FieldValue.arrayUnion(Id)
             });
         }
-        console.log("NameId: " + Id);
     });
 
     return Id;
@@ -254,8 +265,8 @@ function receiveStream(peerConnection, remoteEndpointID) {
 }
 
 
-function sendStream(peerConnection) {
-    localStream.getTracks().forEach(track => {
+function sendStream(peerConnection, stream) {
+    stream.getTracks().forEach(track => {
         peerConnection.addTrack(track, document.querySelector('#localVideo').srcObject);
     });
 }
@@ -317,7 +328,7 @@ async function peerRequestConnection(peerId, roomRef, nameId) {
     const peerConnection = new RTCPeerConnection(configuration);
 
     registerPeerConnectionListeners(peerConnection);
-    sendStream(peerConnection)
+    sendStream(peerConnection, cameraStream)
 
     signalICECandidates(peerConnection, roomRef, peerId, nameId);
     const offer = await createOffer(peerConnection);
@@ -347,7 +358,7 @@ async function peerAcceptConnection(peerId, roomRef, nameId) {
     console.log('Create PeerConnection with configuration: ', configuration)
     const peerConnection = new RTCPeerConnection(configuration);
     registerPeerConnectionListeners(peerConnection);
-    sendStream(peerConnection);
+    sendStream(peerConnection, cameraStream);
 
     signalICECandidates(peerConnection, roomRef, peerId, nameId)
 
@@ -493,6 +504,7 @@ async function joinRoomById(roomId) {
             const peers = snapshot.data().names
             console.log("Current peers: " + peers);
             if (peers[peers.length - 1] != nameId && peers[peers.length - 1] != contentId) {
+                console.log(contentId);
                 console.log('Sending request to: ' + peers[peers.length - 1]);
                 await peerRequestConnection(peers[peers.length - 1], roomRef, nameId);
             }
