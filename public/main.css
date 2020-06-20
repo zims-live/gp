@@ -123,9 +123,13 @@ body {
     width: 100%;
     height: 100%;
     background: grey;
+}
+
+.inverseVid {
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
 }
+
 
 @media (orientation: portrait) {
     #buttons {
@@ -199,3 +203,10 @@ body {
     display: none;
 }
 
+/*.sideLocalVideo {*/
+    /*position: fixed;*/
+    /*right: 1vw;*/
+    /*bottom: 1vh;*/
+    /*height: 10vh;*/
+    /*width: 10vh;*/
+/*}*/

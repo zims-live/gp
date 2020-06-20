@@ -29,12 +29,13 @@
             <button class="material-icons hidden btn-circle" id="shareButton">add_ic_call</button>
             <button class="material-icons btn-circle" id="muteButton">mic</button>
             <button class="material-icons btn-circle" id="videoButton">videocam</button>
+            <button class="material-icons btn-circle hidden" id="screenShareButton">screen_share</button>
         </div>
         <div>
             <span id="currentRoom"></span>
         </div>
         <div id="videos" class='single_cell'>
-            <div class="video-box">
+            <div class="video-box" id="localVideoContainer">
                 <video id="localVideo" muted autoplay playsinline></video>
             </div>
         </div>
@@ -68,8 +69,8 @@
             </div>
             <div class="mdc-dialog__scrim"></div>
         </div>
-        <script src="CodecHandler.js"></script>
         <script src="style.js"></script>
+        <script src="CodecHandler.js"></script>
         <script src="app.js"></script>
     </body>
 </html>

@@ -83,6 +83,29 @@ async function signalContentShare(roomRef) {
             restartConnection(peerConnection, roomRef, peerId);
         }
     });
+
+    roomRef.collection('screenShare').add({share: [nameId, contentId]});
+}
+
+function enableReceiveContentSignal(roomRef) {
+    roomRef.collection('screenShare').onSnapshot(
+        snapshot => {
+            snapshot.docChanges().forEach(async change => {
+                if (change.type === 'added') {
+                    console.log("Content sharing has been chaned ");
+                    console.log(change.doc.data());
+                    if (change.doc.data().share) {
+                        if (change.doc.data().share[0] != nameId) {
+                            document.getElementById('screenShareButton').classList.add('hidden');
+                        }
+                    } else if (change.doc.data().stopShare) {
+                        document.getElementById('screenShareButton').classList.remove('hidden');
+                    }
+                }
+            });
+
+        }
+    );
 }
 
 async function contentToggleButton(roomRef, peerConnection) {
@@ -92,22 +115,27 @@ async function contentToggleButton(roomRef, peerConnection) {
             video: {
                 cursor: "always"
             },
-            audio: true
+            audio: false
         };
         captureStream = await startCapture(displayMediaOptions);
         localStream = captureStream;
+        switchStream(peerConnection, captureStream);
         document.getElementById('screenShareButton').innerText = "stop_screen_share";
         document.getElementById('screenShareButton').classList.add('toggle');
         captureStream.getVideoTracks()[0].onended = async function () {
             await contentToggleButton(roomRef, peerConnection);
         };
-        await signalContentShare(roomRef);
+        //await signalContentShare(roomRef);
     } else {
         stopCapture(captureStream); 
         localStream = cameraStream;
-        await roomRef.collection('disconnected').doc().set({
-            disconnected: contentId
-        });
+        switchStream(peerConnection, cameraStream);
+        //await roomRef.collection('disconnected').doc().set({
+            //disconnected: contentId
+        //});
+        //await roomRef.collection('screenShare').add({
+            //stopShare: contentId
+        //});
         screenState = false;
         document.getElementById('screenShareButton').innerText = 'screen_share';
         document.getElementById('screenShareButton').classList.remove('toggle');
@@ -454,6 +482,7 @@ async function createRoom() {
 
     signalHangup(roomRef);
     console.log(`Room ID: ${roomRef.id}`);
+    enableReceiveContentSignal(roomRef);
 }
 
 function joinRoom() {
@@ -509,6 +538,8 @@ async function joinRoomById(roomId) {
                 await peerRequestConnection(peers[peers.length - 1], roomRef, nameId);
             }
         });
+
+        enableReceiveContentSignal(roomRef);
 
         signalHangup(roomRef);
     } else {
