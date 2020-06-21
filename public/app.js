@@ -54,7 +54,7 @@ async function contentToggleButton(roomRef, peerConnection) {
             audio: false
         };
         captureStream = await startCapture(displayMediaOptions);
-        localStream = captureStream;
+        localStream = cameraStream;
         switchStream(peerConnection, captureStream);
         document.getElementById('screenShareButton').innerText = "stop_screen_share";
         document.getElementById('screenShareButton').classList.add('toggle');
