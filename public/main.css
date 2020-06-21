@@ -133,8 +133,8 @@ body {
 
 @media (orientation: portrait) {
     #buttons {
-        left: 20vw;
-        right: 20vw;
+        left: 16vw;
+        right: 16vw;
     }
 
     .single_cell {
@@ -203,10 +203,10 @@ body {
     display: none;
 }
 
-/*.sideLocalVideo {*/
-    /*position: fixed;*/
-    /*right: 1vw;*/
-    /*bottom: 1vh;*/
-    /*height: 10vh;*/
-    /*width: 10vh;*/
-/*}*/
+.sideLocalVideo {
+    position: fixed;
+    right: 1vw;
+    bottom: 1vh;
+    height: 10vh;
+    width: 10vh;
+}
