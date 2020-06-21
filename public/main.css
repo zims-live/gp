@@ -8,7 +8,7 @@
     left: 35vw;
     right: 35vw;
     position: fixed;
-    z-index: 1;
+    z-index: 3;
     bottom: -10vh;
     align-items: center;
     justify-content: space-around;
@@ -139,7 +139,7 @@ body {
 
     .single_cell {
         grid-template-columns: 1fr;
-        grid-template-rows: 1fr 1fr;
+        grid-template-rows: 94vh;
     }
 
     .two_cell {
@@ -203,10 +203,14 @@ body {
     display: none;
 }
 
+.relaxedHidden {
+    visibility: hidden;
+}
+
 .sideLocalVideo {
     position: fixed;
     right: 1vw;
     bottom: 1vh;
-    height: 10vh;
-    width: 10vh;
+    width: 20vw;
+    z-index: 1;
 }

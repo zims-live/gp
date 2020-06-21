@@ -15,7 +15,7 @@ let nameId = null;
 let muteState = false;
 let videoState = true;
 var contentState = false;
-let numberOfDisplayedPeers = 1;
+let numberOfDisplayedPeers = 0;
 let screenState = false;
 let cameraStream = null;
 let captureStream = null;
@@ -519,7 +519,10 @@ function init() {
     document.querySelector('#hangupBtn').addEventListener('click', hangUp);
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
+    document.querySelector('#localVideo').addEventListener('click', hideLocalVideo);
+    document.querySelector('#localVideoShowButton').addEventListener('click', showLocalVideo);
     hideNavBarOnTap();
+
     muteToggleEnable();
     videoToggleEnable();
 
