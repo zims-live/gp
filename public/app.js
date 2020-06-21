@@ -166,13 +166,13 @@ function muteToggleEnable() {
         if (!muteState) {
             console.log("Muting");
             muteState = true;
-            document.getElementById("localVideo").srcObject.getAudioTracks()[0].enabled = false;
+            cameraStream.getAudioTracks()[0].enabled = false;
             document.querySelector('#muteButton').innerText = "mic_off";
             document.getElementById('muteButton').classList.add('toggle');
         } else {
             console.log("Unmuting");
             muteState = false;
-            document.getElementById("localVideo").srcObject.getAudioTracks()[0].enabled = true;
+            cameraStream.getAudioTracks()[0].enabled = true;
             document.querySelector('#muteButton').innerText = "mic";
             document.getElementById('muteButton').classList.remove('toggle');
         }
