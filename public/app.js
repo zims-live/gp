@@ -144,10 +144,7 @@ async function createAnswer(peerConnection) {
 function signalHangup(roomRef) {
     document.querySelector('#hangupBtn').addEventListener('click', async () => {
         console.log("Disconnecting");
-
-        await roomRef.collection('disconnected').doc().set({
-            disconnected: nameId
-        });
+        roomRef.collection('partyList').doc(nameId).delete();
     });
 }
 
@@ -181,21 +178,8 @@ async function receiveICECandidates(peerConnection, roomRef, remoteEndpointID, n
 }
 
 async function addUserToRoom(roomRef) {
-    let Id;
-    await roomRef.get().then(async snapshot => {
-        if (!snapshot.exists) { 
-            Id = "peer1";
-            await roomRef.set({
-                names : [Id]
-            });
-        } else {
-            Id = "peer" + (snapshot.data().names.length + 1);
-            await roomRef.update({
-                names: firebase.firestore.FieldValue.arrayUnion(Id)
-            });
-        }
-    });
-
+    let Id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    roomRef.collection('partyList').doc(Id).set({'name': Id});
     return Id;
 }
 
@@ -215,10 +199,10 @@ function receiveStream(peerConnection, remoteEndpointID) {
 
     peerConnection.addEventListener('track', event => {
         console.log('Got remote track:', event.streams[0]);
-        document.querySelector("#" + remoteEndpointID).srcObject = event.streams[0];
+        document.querySelector("#video" + remoteEndpointID).srcObject = event.streams[0];
     });
 
-    document.querySelector("#" + remoteEndpointID).muted = false;
+    document.querySelector("#video" + remoteEndpointID).muted = false;
     enforceGridRules(++numberOfDisplayedPeers);
 }
 
@@ -262,11 +246,11 @@ async function receiveOffer(peerConnection1, roomRef, peerId, nameId) {
 }
 
 function closeConnection(peerConnection, roomRef, peerId) {
-    roomRef.collection('disconnected').where('disconnected', '==', peerId).onSnapshot(querySnapshot => {
-        querySnapshot.forEach(snapshot => {
-            if (snapshot.exists) {
+    roomRef.collection('partyList').where('name', '==', peerId).onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+            if (change.type == 'removed') {
                 peerConnection.close();    
-                document.getElementById(peerId + "Container").remove();
+                document.getElementById("video" + peerId + "Container").remove();
                 enforceGridRules(--numberOfDisplayedPeers);
             }
         });
@@ -274,9 +258,7 @@ function closeConnection(peerConnection, roomRef, peerId) {
 
     peerConnection.onconnectionstatechange = function() {
         if (peerConnection.connectionState == "failed") {
-            peerConnection.close();    
-            document.getElementById(peerId + "Container").remove();
-            enforceGridRules(--numberOfDisplayedPeers);
+            roomRef.collection('partyList').doc(peerId).delete();
         }
     }
 }
@@ -381,15 +363,15 @@ function registerPeerConnectionListeners(peerConnection) {
     });
 }
 
-function requestConnectionToJoiningPeers(roomRef) {
-    roomRef.onSnapshot(async snapshot => {
-        if (snapshot.exists) {
-            const peers = snapshot.data().names
-            if (peers.length != 1 && peers[peers.length - 1] != nameId) {
-                console.log('Sending request to: ' + peers[peers.length - 1]);
-                await peerRequestConnection(peers[peers.length - 1], roomRef, nameId);
+function requestConnectionToCurrentPeers(roomRef) {
+    roomRef.collection('partyList').get().then(snapshot => {
+        snapshot.docs.forEach(async doc => {
+            const peerId = doc.data().name
+            if (peerId != nameId) {
+                console.log('Sending request to: ' + peerId);
+                await peerRequestConnection(peerId, roomRef, nameId);
             }
-        }
+        })
     });
 }
 
@@ -411,7 +393,9 @@ async function createRoom() {
 
     nameId = await addUserToRoom(roomRef);
 
-    requestConnectionToJoiningPeers(roomRef);
+    roomRef.set({host: nameId});
+
+    acceptConnectionsFromJoiningPeers(roomRef);
 
     signalHangup(roomRef);
     console.log(`Room ID: ${roomRef.id}`);
@@ -426,7 +410,7 @@ function joinRoom() {
     roomDialog.open();
 }
 
-function acceptConnectionsFromCurrentPeersInParty(roomRef) {
+function acceptConnectionsFromJoiningPeers(roomRef) {
     roomRef.collection(nameId).doc('SDP').collection('offer').onSnapshot(async snapshot => {
         await snapshot.docChanges().forEach(async change => {
             if (change.type === 'added') {
@@ -463,9 +447,9 @@ async function joinRoomById(roomId) {
 
         console.log('Join room: ', roomId);
 
-        acceptConnectionsFromCurrentPeersInParty(roomRef);
+        requestConnectionToCurrentPeers(roomRef);
 
-        requestConnectionToJoiningPeers(roomRef);
+        acceptConnectionsFromJoiningPeers(roomRef);
 
         signalHangup(roomRef);
 
@@ -476,8 +460,16 @@ async function joinRoomById(roomId) {
 }
 
 async function openUserMedia() {
-    cameraStream = await navigator.mediaDevices.getUserMedia(
-        {video: true, audio: true});
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "user"
+            }, 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+            }
+    });
     document.querySelector('#localVideo').srcObject = cameraStream;
 
     localStream = cameraStream;

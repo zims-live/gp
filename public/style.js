@@ -30,15 +30,15 @@ function createPeerVideo(peerId) {
     const peerNode = document.getElementsByClassName('video-box')[0].cloneNode();
     peerNode.appendChild(document.getElementById('localVideo').cloneNode());
 
-    peerNode.id = peerId + "Container";
-    peerNode.firstElementChild.id = peerId;
+    peerNode.id = 'video' + peerId + "Container";
+    peerNode.firstElementChild.id = 'video' + peerId;
 
     peerNode.classList.remove('sideLocalVideo');
     peerNode.classList.remove('relaxedHidden');
 
     document.getElementById("videos").appendChild(peerNode);
 
-    document.getElementById(peerId).srcObject = new MediaStream();
+    document.getElementById("video" + peerId).srcObject = new MediaStream();
 }
 
 function hideLocalVideo() {
