@@ -43,19 +43,17 @@ function videoToggleEnable() {
     });
 }
 
-function toggleOnContent(peerConnection) {
-    switchStream(peerConnection, captureStream);
+function toggleOnContent() {
+    document.getElementById('localVideo').srcObject = captureStream;
     document.getElementById('screenShareButton').innerText = "stop_screen_share";
     document.getElementById('screenShareButton').classList.add('toggle');
-    captureStream.getVideoTracks()[0].onended = async function () {
-        await contentToggleButton(peerConnection);
-    };
+    captureStream.getVideoTracks()[0].onended = contentToggleButton;
     screenState = true;
 }
 
 
 
-async function contentToggleButton(peerConnection) {
+async function contentToggleButton() {
     if (!screenState) {
         const displayMediaOptions = {
             video: {
@@ -64,14 +62,14 @@ async function contentToggleButton(peerConnection) {
             audio: false
         };
         try {
+            console.log('Toggling screen share');
             captureStream = await startCapture(displayMediaOptions);
-            toggleOnContent(peerConnection);
+            toggleOnContent();
         } catch(error) {
             console.log(error.message);
         } 
     } else {
         stopCapture(captureStream); 
-        switchStream(peerConnection, cameraStream);
         screenState = false;
         document.getElementById('screenShareButton').innerText = 'screen_share';
         document.getElementById('screenShareButton').classList.remove('toggle');
@@ -287,7 +285,15 @@ async function peerRequestConnection(peerId, roomRef, nameId) {
 
     restartConnection(peerConnection, roomRef, peerId);
 
-    document.querySelector('#screenShareButton').addEventListener('click', async () => await contentToggleButton(peerConnection));
+    document.querySelector('#screenShareButton').addEventListener('click', () => {
+        if (!screenState) {
+            console.log('Sharing screen');
+            switchStream(peerConnection, captureStream);
+        } else {
+            console.log('Stopping screen sharing');
+            switchStream(peerConnection, cameraStream);
+        }
+    });
 
     if (!isHandheld()) {
         document.querySelector('#screenShareButton').classList.remove("hidden");
@@ -318,7 +324,15 @@ async function peerAcceptConnection(peerId, roomRef, nameId) {
 
     restartConnection(peerConnection, roomRef, peerId);
 
-    document.querySelector('#screenShareButton').addEventListener('click', async () => await contentToggleButton(peerConnection));
+    document.querySelector('#screenShareButton').addEventListener('click', () => {
+        if (screenState) {
+            console.log('Sharing screen');
+            switchStream(peerConnection, captureStream);
+        } else {
+            console.log('Stopping screen sharing');
+            switchStream(peerConnection, cameraStream);
+        }
+    });
 
     if (!isHandheld()) {
         document.querySelector('#screenShareButton').classList.remove("hidden");
@@ -381,6 +395,7 @@ async function createRoom() {
     document.querySelector('#shareButton').classList.remove("hidden");
     document.querySelector('#muteButton').classList.remove("hidden");
     document.querySelector('#joinBtn').classList.add("hidden");
+    document.querySelector('#screenShareButton').addEventListener('click', contentToggleButton);
     const db = firebase.firestore();
     const roomRef = await db.collection('rooms').doc();
 
@@ -442,6 +457,7 @@ async function joinRoomById(roomId) {
         document.querySelector('#createBtn').classList.add("hidden");
         document.querySelector('#joinBtn').classList.add("hidden");
         document.querySelector('#muteButton').classList.remove("hidden");
+        document.querySelector('#screenShareButton').addEventListener('click', contentToggleButton);
 
         nameId = await addUserToRoom(roomRef);
 
