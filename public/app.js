@@ -12,6 +12,7 @@ const configuration = {
 
 let roomDialog = null;
 let nameId = null;
+let contentId = null;
 let muteState = false;
 let videoState = true;
 var contentState = false;
@@ -19,7 +20,6 @@ let numberOfDisplayedPeers = 0;
 let screenState = false;
 let cameraStream = null;
 let captureStream = null;
-let localStream = null;
 
 function isHandheld() {
   let check = false;
@@ -43,17 +43,29 @@ function videoToggleEnable() {
     });
 }
 
-function toggleOnContent() {
+function toggleOnContent(roomRef) {
     document.getElementById('localVideo').srcObject = captureStream;
     document.getElementById('screenShareButton').innerText = "stop_screen_share";
     document.getElementById('screenShareButton').classList.add('toggle');
-    captureStream.getVideoTracks()[0].onended = contentToggleButton;
+    signalContentShare(roomRef);
     screenState = true;
+    captureStream.getVideoTracks()[0].onended = () => {
+        contentToggleOff(roomRef);
+    }
 }
 
 
+function signalContentShare(roomRef) {
+    contentId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    doc = roomRef.collection('partyList').doc(contentId).set({
+        "name" : contentId,
+        "display" : "content"
+    }); 
+    requestConnectionToCurrentPeers(roomRef, contentId, true);
+    acceptConnectionsFromJoiningPeers(roomRef, contentId, true);
+}
 
-async function contentToggleButton() {
+async function contentToggleButton(roomRef) {
     if (!screenState) {
         const displayMediaOptions = {
             video: {
@@ -64,16 +76,22 @@ async function contentToggleButton() {
         try {
             console.log('Toggling screen share');
             captureStream = await startCapture(displayMediaOptions);
-            toggleOnContent();
+            toggleOnContent(roomRef);
         } catch(error) {
             console.log(error.message);
         } 
     } else {
-        stopCapture(captureStream); 
-        screenState = false;
-        document.getElementById('screenShareButton').innerText = 'screen_share';
-        document.getElementById('screenShareButton').classList.remove('toggle');
+        contentToggleOff(roomRef);
     }
+}
+
+function contentToggleOff(roomRef) {
+    roomRef.collection('partyList').doc(contentId).delete();
+    stopCapture(captureStream); 
+    document.getElementById('localVideo').srcObject = cameraStream;
+    screenState = false;
+    document.getElementById('screenShareButton').innerText = 'screen_share';
+    document.getElementById('screenShareButton').classList.remove('toggle');
 }
 
 async function startCapture(displayMediaOptions) {
@@ -143,6 +161,14 @@ function signalHangup(roomRef) {
     document.querySelector('#hangupBtn').addEventListener('click', async () => {
         console.log("Disconnecting");
         roomRef.collection('partyList').doc(nameId).delete();
+        if (screenState) {
+            roomRef.collection('partyList').doc(contentId).delete();
+        }
+        roomRef.collection('partyList').get().then(snapshot => {
+            if (!snapshot.exists) {
+               roomRef.delete(); 
+            }
+        });
     });
 }
 
@@ -177,7 +203,10 @@ async function receiveICECandidates(peerConnection, roomRef, remoteEndpointID, n
 
 async function addUserToRoom(roomRef) {
     let Id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    roomRef.collection('partyList').doc(Id).set({'name': Id});
+    roomRef.collection('partyList').doc(Id).set({
+        'name': Id,
+        'display' : 'user'
+    });
     return Id;
 }
 
@@ -207,38 +236,47 @@ function receiveStream(peerConnection, remoteEndpointID) {
 
 function sendStream(peerConnection, stream) {
     stream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, document.querySelector('#localVideo').srcObject);
+        peerConnection.addTrack(track, stream);
     });
 }
 
-async function sendOffer(offer, roomRef, peerId, nameId) {
+async function sendOffer(offer, roomRef, peerId, nameId, isUserContent) {
     const peerOffer = {
         'offer': {
             type: offer.type,
             sdp: offer.sdp,
+            display: 'user'
         },
     };
+
+    if (isUserContent) {
+        peerOffer.display = 'content'; 
+    }
+
     await roomRef.collection(peerId).doc('SDP').collection('offer').doc(nameId).set(peerOffer);
 }
 
-async function sendAnswer(answer, roomRef, peerId, nameId) {
+async function sendAnswer(answer, roomRef, peerId, nameId, isUserContent) {
     const peerAnswer = {
         'answer': {
             type: answer.type,
             sdp: answer.sdp,
+            display: 'user'
         },
     };
+    if (isUserContent) {
+        peerAnswer.display = 'content';
+    }
     await roomRef.collection(peerId).doc('SDP').collection('answer').doc(nameId).set(peerAnswer);
 }
 
-async function receiveOffer(peerConnection1, roomRef, peerId, nameId) {
+async function receiveOffer(peerConnection, roomRef, peerId, nameId) {
     await roomRef.collection(nameId).doc('SDP').collection('offer').doc(peerId).get().then(async snapshot => {
         if (snapshot.exists) {
             const data = snapshot.data();
-            console.log(data);
             const offer = data.offer;
             console.log('Got offer:', offer);
-            await peerConnection1.setRemoteDescription(new RTCSessionDescription(offer));
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
         }
     });
 }
@@ -247,6 +285,9 @@ function closeConnection(peerConnection, roomRef, peerId) {
     roomRef.collection('partyList').where('name', '==', peerId).onSnapshot(snapshot => {
         snapshot.docChanges().forEach(change => {
             if (change.type == 'removed') {
+                if (change.doc.data().display == 'content') {
+                    document.getElementById('screenShareButton').classList.remove('hidden');
+                }
                 peerConnection.close();    
                 document.getElementById("video" + peerId + "Container").remove();
                 enforceGridRules(--numberOfDisplayedPeers);
@@ -261,19 +302,26 @@ function closeConnection(peerConnection, roomRef, peerId) {
     }
 }
 
-async function peerRequestConnection(peerId, roomRef, nameId) {
+async function peerRequestConnection(peerId, roomRef, nameId, isContent) {
     console.log('Create PeerConnection with configuration: ', configuration);
     const peerConnection = new RTCPeerConnection(configuration);
 
     registerPeerConnectionListeners(peerConnection);
-    sendStream(peerConnection, cameraStream)
+
+    if (isContent) {
+        sendStream(peerConnection, captureStream)
+    } else {
+        sendStream(peerConnection, cameraStream)
+    }
 
     signalICECandidates(peerConnection, roomRef, peerId, nameId);
     const offer = await createOffer(peerConnection);
 
-    await sendOffer(offer, roomRef, peerId, nameId);
+    await sendOffer(offer, roomRef, peerId, nameId, isContent);
 
-    receiveStream(peerConnection, peerId);
+    if (!isContent) {
+        receiveStream(peerConnection, peerId);
+    }
 
     await receiveAnswer(peerConnection, roomRef, peerId, nameId); 
 
@@ -281,62 +329,48 @@ async function peerRequestConnection(peerId, roomRef, nameId) {
 
     document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection.close());
 
-    closeConnection(peerConnection, roomRef, peerId);
+    if (!isContent) {
+        closeConnection(peerConnection, roomRef, peerId);
+    }
 
     restartConnection(peerConnection, roomRef, peerId);
 
-    document.querySelector('#screenShareButton').addEventListener('click', () => {
-        if (!screenState) {
-            console.log('Sharing screen');
-            switchStream(peerConnection, captureStream);
-        } else {
-            console.log('Stopping screen sharing');
-            switchStream(peerConnection, cameraStream);
-        }
-    });
-
-    if (!isHandheld()) {
-        document.querySelector('#screenShareButton').classList.remove("hidden");
-    }
 }
 
-async function peerAcceptConnection(peerId, roomRef, nameId) {
+async function peerAcceptConnection(peerId, roomRef, nameId, isPeerContent, isUserContent) {
     console.log('Create PeerConnection with configuration: ', configuration)
     const peerConnection = new RTCPeerConnection(configuration);
     registerPeerConnectionListeners(peerConnection);
-    sendStream(peerConnection, cameraStream);
+
+    if (!isPeerContent) {
+        if (isUserContent) {
+            sendStream(peerConnection, captureStream);
+        } else {
+            sendStream(peerConnection, cameraStream);
+        }
+    }
 
     signalICECandidates(peerConnection, roomRef, peerId, nameId)
 
-    receiveStream(peerConnection, peerId);
+    if (!isUserContent) {
+        receiveStream(peerConnection, peerId);
+    }
 
     await receiveOffer(peerConnection, roomRef, peerId, nameId);
 
     const answer = await createAnswer(peerConnection);
 
-    await sendAnswer(answer, roomRef, peerId, nameId);
+    await sendAnswer(answer, roomRef, peerId, nameId, isUserContent);
 
     await receiveICECandidates(peerConnection, roomRef, peerId, nameId);
 
     document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection.close());
 
-    closeConnection(peerConnection, roomRef, peerId);
+    if (!isUserContent) {
+        closeConnection(peerConnection, roomRef, peerId);
+    }
 
     restartConnection(peerConnection, roomRef, peerId);
-
-    document.querySelector('#screenShareButton').addEventListener('click', () => {
-        if (screenState) {
-            console.log('Sharing screen');
-            switchStream(peerConnection, captureStream);
-        } else {
-            console.log('Stopping screen sharing');
-            switchStream(peerConnection, cameraStream);
-        }
-    });
-
-    if (!isHandheld()) {
-        document.querySelector('#screenShareButton').classList.remove("hidden");
-    }
 }
 
 function restartConnection(peerConnection, roomRef, peerId) {
@@ -349,7 +383,7 @@ function restartConnection(peerConnection, roomRef, peerId) {
                 peerConnection.createOffer({ iceRestart: true })
                     .then(peerConnection.setLocalDescription)
                     .then(async offer => {
-                        await sendOffer(offer, roomRef, peerId);
+                        await sendOffer(offer, roomRef, peerId, false);
                     });
             }
         }
@@ -377,13 +411,18 @@ function registerPeerConnectionListeners(peerConnection) {
     });
 }
 
-function requestConnectionToCurrentPeers(roomRef) {
+function requestConnectionToCurrentPeers(roomRef, Id, isContent) {
     roomRef.collection('partyList').get().then(snapshot => {
         snapshot.docs.forEach(async doc => {
             const peerId = doc.data().name
-            if (peerId != nameId) {
+            const isPeerContent = doc.data().display == 'content';
+            if (peerId != nameId && peerId != Id) {
+                if (isPeerContent) {
+                    console.log('Content Identified');
+                    document.getElementById('screenShareButton').classList.add('hidden');
+                }
                 console.log('Sending request to: ' + peerId);
-                await peerRequestConnection(peerId, roomRef, nameId);
+                await peerRequestConnection(peerId, roomRef, Id, isContent);
             }
         })
     });
@@ -395,7 +434,9 @@ async function createRoom() {
     document.querySelector('#shareButton').classList.remove("hidden");
     document.querySelector('#muteButton').classList.remove("hidden");
     document.querySelector('#joinBtn').classList.add("hidden");
-    document.querySelector('#screenShareButton').addEventListener('click', contentToggleButton);
+    if (!isHandheld()) {
+        document.querySelector('#screenShareButton').classList.remove("hidden");
+    }
     const db = firebase.firestore();
     const roomRef = await db.collection('rooms').doc();
 
@@ -410,10 +451,12 @@ async function createRoom() {
 
     roomRef.set({host: nameId});
 
-    acceptConnectionsFromJoiningPeers(roomRef);
+    acceptConnectionsFromJoiningPeers(roomRef, nameId, false);
 
     signalHangup(roomRef);
     console.log(`Room ID: ${roomRef.id}`);
+
+    document.querySelector('#screenShareButton').addEventListener('click', () => contentToggleButton(roomRef));
 }
 
 function joinRoom() {
@@ -425,12 +468,21 @@ function joinRoom() {
     roomDialog.open();
 }
 
-function acceptConnectionsFromJoiningPeers(roomRef) {
+function acceptConnectionsFromJoiningPeers(roomRef, nameId, isReceiverContent) {
     roomRef.collection(nameId).doc('SDP').collection('offer').onSnapshot(async snapshot => {
         await snapshot.docChanges().forEach(async change => {
             if (change.type === 'added') {
                 console.log("Accepting Request from: " + change.doc.id);
-                await peerAcceptConnection(change.doc.id, roomRef, nameId);
+                let isSenderContent = false;
+                console.log("Display : ");
+                console.log(change.doc.data());
+                if (change.doc.data().display == 'content') {
+                    console.log('Content Identified');
+                    isSenderContent = true; 
+                    document.getElementById('screenShareButton').classList.add('hidden');
+                }
+                console.log('Is sender content' + isSenderContent);
+                await peerAcceptConnection(change.doc.id, roomRef, nameId, isSenderContent, isReceiverContent);
             } else {
                 console.log("Mesh has been setup.");
             }
@@ -457,17 +509,21 @@ async function joinRoomById(roomId) {
         document.querySelector('#createBtn').classList.add("hidden");
         document.querySelector('#joinBtn').classList.add("hidden");
         document.querySelector('#muteButton').classList.remove("hidden");
-        document.querySelector('#screenShareButton').addEventListener('click', contentToggleButton);
+        if (!isHandheld()) {
+            document.querySelector('#screenShareButton').classList.remove("hidden");
+        }
 
         nameId = await addUserToRoom(roomRef);
 
         console.log('Join room: ', roomId);
 
-        requestConnectionToCurrentPeers(roomRef);
+        requestConnectionToCurrentPeers(roomRef, nameId, false);
 
-        acceptConnectionsFromJoiningPeers(roomRef);
+        acceptConnectionsFromJoiningPeers(roomRef, nameId, false);
 
         signalHangup(roomRef);
+
+        document.querySelector('#screenShareButton').addEventListener('click', () => contentToggleButton(roomRef));
 
     } else {
         document.querySelector(
@@ -477,18 +533,16 @@ async function joinRoomById(roomId) {
 
 async function openUserMedia() {
     cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: "user"
-            }, 
-            audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true,
-            }
+        video: {
+            facingMode: "user"
+        }, 
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+        }
     });
     document.querySelector('#localVideo').srcObject = cameraStream;
-
-    localStream = cameraStream;
 
     console.log('Stream:', document.querySelector('#localVideo').srcObject);
     document.querySelector('#joinBtn').classList.remove("hidden");
