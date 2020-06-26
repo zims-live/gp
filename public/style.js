@@ -34,7 +34,7 @@ function enforceLayout(numberOfDisplayedPeers) {
 
             document.removeEventListener('touchend', swipeEventFunction);
             swipeEventFunction = function () {
-                if (swipeDone && Math.abs(lastX - currentX) > 50 && Math.abs(lastY - currentY) < 15) {
+                if (swipeDone && Math.abs(lastX - currentX) > 50 && Math.abs(lastY - currentY) < 50) {
                     swipeDone = false;
                     swipeContent();
                 }
