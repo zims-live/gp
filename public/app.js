@@ -20,6 +20,8 @@ let screenState = false;
 let cameraStream = null;
 let captureStream = null;
 let contentExists = false;
+let contentShown = false;
+let swipeEventFunction;
 
 function isHandheld() {
   let check = false;
@@ -287,10 +289,12 @@ function closeConnection(peerConnection, roomRef, peerId) {
                 if (change.doc.data().display == 'content') {
                     document.getElementById('screenShareButton').classList.remove('hidden');
                     contentExists = false;
+                    contentShown = false;
+                    document.removeEventListener('touchmove', swipeEventFunction);
                 }
                 peerConnection.close();    
                 document.getElementById("video" + peerId + "Container").remove();
-                enforceGridRules(--numberOfDisplayedPeers);
+                enforceLayout(--numberOfDisplayedPeers);
             }
         });
     });
@@ -302,13 +306,13 @@ function closeConnection(peerConnection, roomRef, peerId) {
     }
 }
 
-async function peerRequestConnection(peerId, roomRef, nameId, isContent) {
+async function peerRequestConnection(peerId, roomRef, nameId, isUserContent, isPeerContent) {
     console.log('Create PeerConnection with configuration: ', configuration);
     const peerConnection = new RTCPeerConnection(configuration);
 
     registerPeerConnectionListeners(peerConnection);
 
-    if (isContent) {
+    if (isUserContent) {
         sendStream(peerConnection, captureStream)
     } else {
         sendStream(peerConnection, cameraStream)
@@ -317,10 +321,10 @@ async function peerRequestConnection(peerId, roomRef, nameId, isContent) {
     signalICECandidates(peerConnection, roomRef, peerId, nameId);
     const offer = await createOffer(peerConnection);
 
-    await sendOffer(offer, roomRef, peerId, nameId, isContent);
+    await sendOffer(offer, roomRef, peerId, nameId, isUserContent);
 
-    if (!isContent) {
-        receiveStream(peerConnection, peerId, false);
+    if (!isUserContent) {
+        receiveStream(peerConnection, peerId, isPeerContent);
     }
 
     await receiveAnswer(peerConnection, roomRef, peerId, nameId); 
@@ -329,11 +333,11 @@ async function peerRequestConnection(peerId, roomRef, nameId, isContent) {
 
     document.querySelector('#hangupBtn').addEventListener('click', () => peerConnection.close());
 
-    if (!isContent) {
+    if (!isUserContent) {
         closeConnection(peerConnection, roomRef, peerId);
     }
 
-    if (!isContent) {
+    if (!isUserContent) {
         restartConnection(peerConnection, roomRef, peerId);
     }
 
@@ -426,7 +430,7 @@ function requestConnectionToCurrentPeers(roomRef, Id, isContent) {
                     document.getElementById('screenShareButton').classList.add('hidden');
                 }
                 console.log('Sending request to: ' + peerId);
-                await peerRequestConnection(peerId, roomRef, Id, isContent);
+                await peerRequestConnection(peerId, roomRef, Id, isContent, isPeerContent);
             }
         })
     });
