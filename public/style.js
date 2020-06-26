@@ -1,5 +1,4 @@
 let numberOfDisplayedPeers = 0;
-let swipeDone = false;
 
 function enforceLayout(numberOfDisplayedPeers) {
     if (!contentExists) {
@@ -15,16 +14,36 @@ function enforceLayout(numberOfDisplayedPeers) {
                     elem.classList.add('hidden');
                 }
             });
+            
+            let swipeDone = false;
+            let lastY = 120;
+            let lastX = 120;
+            let currentX = 120;
+            var currentY = 120;
 
-            swipeEventFunction = function () {
-                if (swipeDone) {
-                    swipeDone = false;
-                    console.log(numberOfDisplayedPeers);
-                    swipeContent(numberOfDisplayedPeers);
-                }
+            var touchInitiation = (e) => {
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
             }
 
-            document.addEventListener('touchmove', () => {swipeDone = true}, false);
+            var detectSwipe = (e) => {
+                currentY = e.touches[0].clientY;
+                currentX = e.touches[0].clientX;
+                swipeDone = true;
+            }
+
+            document.removeEventListener('touchend', swipeEventFunction);
+            swipeEventFunction = function () {
+                if (swipeDone && Math.abs(lastX - currentX) > 50 && Math.abs(lastY - currentY) < 15) {
+                    swipeDone = false;
+                    swipeContent();
+                }
+                console.log('currentY ' + currentY + 'Last Y ' + lastY);
+                console.log('currentX ' + currentX + 'Last X ' + lastX);
+            }
+
+            document.addEventListener('touchstart', (e) => touchInitiation(e), false);
+            document.addEventListener('touchmove', (e) => detectSwipe(e), false);
             document.addEventListener('touchend', swipeEventFunction, false);
         } else {
             document.getElementById('videos').setAttribute('class', '');
@@ -33,6 +52,7 @@ function enforceLayout(numberOfDisplayedPeers) {
         }
     }
 }
+
 
 function gridLayout(numberOfDisplayedPeers) {
     document.querySelectorAll('.video-box').forEach(elem => {
@@ -68,11 +88,11 @@ function gridLayout(numberOfDisplayedPeers) {
     }
 }
 
-function swipeContent(numberOfDisplayedPeers) {
+function swipeContent() {
     if (contentShown) {
         contentShown = false;
         document.getElementsByClassName('contentContainer')[0].classList.add('hidden');
-        gridLayout(numberOfDisplayedPeers - 1)
+        gridLayout(numberOfDisplayedPeers - 1);
     } else {
         contentShown = true;
         document.getElementById('videos').setAttribute('class', '');
@@ -109,9 +129,11 @@ function createPeerVideo(peerId, isPeerContent) {
 }
 
 function hideLocalVideo() {
-    localVideoElem = document.getElementById('localVideoContainer');
-    localVideoElem.classList.add('relaxedHidden');
-    document.getElementById('localVideoShowButton').classList.remove('hidden'); 
+    if (numberOfDisplayedPeers > 0) {
+        localVideoElem = document.getElementById('localVideoContainer');
+        localVideoElem.classList.add('relaxedHidden');
+        document.getElementById('localVideoShowButton').classList.remove('hidden'); 
+    }
 }
 
 function showLocalVideo() {

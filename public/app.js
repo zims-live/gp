@@ -22,6 +22,8 @@ let captureStream = null;
 let contentExists = false;
 let contentShown = false;
 let swipeEventFunction;
+var isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
 
 function isHandheld() {
   let check = false;
@@ -219,14 +221,14 @@ async function receiveAnswer(peerConnection, roomRef, peerId, nameId) {
 }
 
 function receiveStream(peerConnection, remoteEndpointID, isPeerContent) {
-    createPeerVideo(remoteEndpointID, isPeerContent);
-
     peerConnection.addEventListener('track', event => {
         console.log('Got remote track:', event.streams[0]);
+        if (document.querySelector("#video" + remoteEndpointID) == null) {
+            createPeerVideo(remoteEndpointID, isPeerContent);
+        }
         document.querySelector("#video" + remoteEndpointID).srcObject = event.streams[0];
+        document.querySelector("#video" + remoteEndpointID).muted = false;
     });
-
-    document.querySelector("#video" + remoteEndpointID).muted = false;
 }
 
 
@@ -282,20 +284,24 @@ function closeConnection(peerConnection, roomRef, peerId) {
         snapshot.docChanges().forEach(change => {
             if (change.type == 'removed') {
                 if (change.doc.data().display == 'content') {
-                    document.getElementById('screenShareButton').classList.remove('hidden');
+                    if (!isHandheld()) {
+                        document.getElementById('screenShareButton').classList.remove('hidden');
+                    }
                     contentExists = false;
                     contentShown = false;
                     document.removeEventListener('touchmove', swipeEventFunction);
                 }
                 peerConnection.close();    
-                document.getElementById("video" + peerId + "Container").remove();
+                if (document.getElementById("video" + peerId + "Container") != null) {
+                    document.getElementById("video" + peerId + "Container").remove();
+                }
                 enforceLayout(--numberOfDisplayedPeers);
             }
         });
     });
 
     peerConnection.onconnectionstatechange = function() {
-        if (peerConnection.connectionState == "failed") {
+        if (peerConnection.connectionState == 'disconnected' || peerConnection.connectionState == "failed") {
             roomRef.collection('partyList').doc(peerId).delete();
         }
     }
@@ -432,6 +438,7 @@ function requestConnectionToCurrentPeers(roomRef, Id, isContent) {
 }
 
 async function createRoom() {
+    document.querySelector('#localVideo').addEventListener('click', hideLocalVideo);
     document.querySelector('#hangupBtn').classList.remove("hidden");
     document.querySelector('#createBtn').classList.add("hidden");
     document.querySelector('#shareButton').classList.remove("hidden");
@@ -501,6 +508,7 @@ async function joinRoomById(roomId) {
 
     if (roomSnapshot.exists) {
         document.querySelector('#hangupBtn').classList.remove("hidden");
+        document.querySelector('#localVideo').addEventListener('click', hideLocalVideo);
         document.querySelector('#shareButton').onclick = () => {
             window.open(
                 `https://api.whatsapp.com/send?text=${window.location.href.split('?')[0]}?roomId=${roomRef.id}`,
@@ -545,6 +553,7 @@ async function openUserMedia() {
             autoGainControl: true,
         }
     });
+
     document.querySelector('#localVideo').srcObject = cameraStream;
 
     console.log('Stream:', document.querySelector('#localVideo').srcObject);
@@ -580,15 +589,13 @@ function init() {
     document.querySelector('#hangupBtn').addEventListener('click', hangUp);
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
-    document.querySelector('#localVideo').addEventListener('click', hideLocalVideo);
     document.querySelector('#localVideoShowButton').addEventListener('click', showLocalVideo);
     hideNavBarOnTap();
 
     muteToggleEnable();
     videoToggleEnable();
 
-    var iOS = ['iPad', 'iPhone', 'iPod'].indexOf(navigator.platform) >= 0;
-    var eventName = iOS ? 'pagehide' : 'beforeunload';
+    var eventName = isiOS ? 'pagehide' : 'beforeunload';
 
     window.addEventListener(eventName, function() {
         document.getElementById('hangupBtn').click();
