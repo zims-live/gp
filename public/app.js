@@ -166,11 +166,6 @@ function signalHangup(roomRef) {
         if (screenState) {
             roomRef.collection('partyList').doc(contentId).delete();
         }
-        roomRef.collection('partyList').get().then(snapshot => {
-            if (!snapshot.exists) {
-               roomRef.delete(); 
-            }
-        });
     });
 }
 

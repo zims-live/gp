@@ -19,6 +19,7 @@ function enforceLayout(numberOfDisplayedPeers) {
             swipeEventFunction = function () {
                 if (swipeDone) {
                     swipeDone = false;
+                    console.log(numberOfDisplayedPeers);
                     swipeContent(numberOfDisplayedPeers);
                 }
             }
