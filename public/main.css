@@ -212,6 +212,7 @@ body {
     right: 1vw;
     bottom: 1vh;
     width: 20vw;
+    height: 1fr;
     z-index: 1;
 }
 

@@ -1,6 +1,8 @@
 ZiMS: A Modern Cloud-based Solution to Multi-party Conferencing
 ------------
 
+![ZiMS UI](images/ZimsUI.png?raw=True "ZimsUI")
+
 Sprint 1
 1.  Firebase data model
 2.  Multiparty functionality
