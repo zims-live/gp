@@ -214,3 +214,8 @@ body {
     width: 20vw;
     z-index: 1;
 }
+
+.contentContainer {
+    grid-column: 1 / 4;
+    grid-row: 1 / 4;
+}

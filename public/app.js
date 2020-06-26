@@ -16,10 +16,10 @@ let contentId = null;
 let muteState = false;
 let videoState = true;
 var contentState = false;
-let numberOfDisplayedPeers = 0;
 let screenState = false;
 let cameraStream = null;
 let captureStream = null;
+let contentExists = false;
 
 function isHandheld() {
   let check = false;
@@ -221,8 +221,8 @@ async function receiveAnswer(peerConnection, roomRef, peerId, nameId) {
     });
 }
 
-function receiveStream(peerConnection, remoteEndpointID) {
-    createPeerVideo(remoteEndpointID);
+function receiveStream(peerConnection, remoteEndpointID, isPeerContent) {
+    createPeerVideo(remoteEndpointID, isPeerContent);
 
     peerConnection.addEventListener('track', event => {
         console.log('Got remote track:', event.streams[0]);
@@ -230,7 +230,6 @@ function receiveStream(peerConnection, remoteEndpointID) {
     });
 
     document.querySelector("#video" + remoteEndpointID).muted = false;
-    enforceGridRules(++numberOfDisplayedPeers);
 }
 
 
@@ -287,6 +286,7 @@ function closeConnection(peerConnection, roomRef, peerId) {
             if (change.type == 'removed') {
                 if (change.doc.data().display == 'content') {
                     document.getElementById('screenShareButton').classList.remove('hidden');
+                    contentExists = false;
                 }
                 peerConnection.close();    
                 document.getElementById("video" + peerId + "Container").remove();
@@ -320,7 +320,7 @@ async function peerRequestConnection(peerId, roomRef, nameId, isContent) {
     await sendOffer(offer, roomRef, peerId, nameId, isContent);
 
     if (!isContent) {
-        receiveStream(peerConnection, peerId);
+        receiveStream(peerConnection, peerId, false);
     }
 
     await receiveAnswer(peerConnection, roomRef, peerId, nameId); 
@@ -333,7 +333,9 @@ async function peerRequestConnection(peerId, roomRef, nameId, isContent) {
         closeConnection(peerConnection, roomRef, peerId);
     }
 
-    restartConnection(peerConnection, roomRef, peerId);
+    if (!isContent) {
+        restartConnection(peerConnection, roomRef, peerId);
+    }
 
 }
 
@@ -353,7 +355,7 @@ async function peerAcceptConnection(peerId, roomRef, nameId, isPeerContent, isUs
     signalICECandidates(peerConnection, roomRef, peerId, nameId)
 
     if (!isUserContent) {
-        receiveStream(peerConnection, peerId);
+        receiveStream(peerConnection, peerId, isPeerContent);
     }
 
     await receiveOffer(peerConnection, roomRef, peerId, nameId);
@@ -370,7 +372,9 @@ async function peerAcceptConnection(peerId, roomRef, nameId, isPeerContent, isUs
         closeConnection(peerConnection, roomRef, peerId);
     }
 
-    restartConnection(peerConnection, roomRef, peerId);
+    if (!isUserContent) {
+        restartConnection(peerConnection, roomRef, peerId);
+    }
 }
 
 function restartConnection(peerConnection, roomRef, peerId) {
