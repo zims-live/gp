@@ -127,7 +127,7 @@ function createPeerVideo(peerId, isPeerContent) {
                 closeFullscreen();
             } else {
                 inFullscreen = true;
-                screen.orientation.lock('landscape');
+                screen.orientation.lock('landscape').then(console.log('Locked landscape'));
                 openFullscreen(peerNode)
             }
         });
