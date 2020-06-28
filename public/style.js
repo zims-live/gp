@@ -116,9 +116,21 @@ function createPeerVideo(peerId, isPeerContent) {
     peerNode.classList.remove('sideLocalVideo');
     peerNode.classList.remove('relaxedHidden');
     if (isPeerContent) {
+        let inFullscreen = false;
         contentShown = true;
         contentExists = true;
         peerNode.classList.add('contentContainer');
+        peerNode.addEventListener('click', () => {
+            if (inFullscreen) {
+                inFullscreen = false;
+                screen.orientation.unlock();
+                closeFullscreen();
+            } else {
+                inFullscreen = true;
+                screen.orientation.lock('landscape');
+                openFullscreen(peerNode)
+            }
+        });
     }
 
     document.getElementById('videos').appendChild(peerNode);
@@ -126,6 +138,30 @@ function createPeerVideo(peerId, isPeerContent) {
     document.getElementById('video' + peerId).srcObject = new MediaStream();
 
     enforceLayout(++numberOfDisplayedPeers);
+}
+
+function openFullscreen(video) {
+    if (video.requestFullscreen) {
+        video.requestFullscreen();
+    } else if (video.mozRequestFullScreen) { /* Firefox */
+        video.mozRequestFullScreen();
+    } else if (video.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+        video.webkitRequestFullscreen();
+    } else if (video.msRequestFullscreen) { /* IE/Edge */
+        video.msRequestFullscreen();
+    }
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) { /* Firefox */
+        document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE/Edge */
+        document.msExitFullscreen();
+    }
 }
 
 function hideLocalVideo() {
