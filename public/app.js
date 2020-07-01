@@ -590,6 +590,21 @@ function init() {
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
     document.querySelector('#localVideoShowButton').addEventListener('click', showLocalVideo);
+
+    let isFullscreen = false;
+    document.getElementById('appFullscreenButton').addEventListener('click', () => {
+        if (!isFullscreen) {
+            isFullscreen = true;
+            openFullscreen(document.body);
+            document.getElementById('appFullscreenButton').classList.add('toggle');
+            document.getElementById('appFullscreenButton').innerText = 'fullscreen_exit';
+        } else {
+            isFullscreen = false;
+            closeFullscreen();
+            document.getElementById('appFullscreenButton').classList.remove('toggle');
+            document.getElementById('appFullscreenButton').innerText = 'fullscreen';
+        }
+    })
     hideNavBarOnTap();
 
     muteToggleEnable();

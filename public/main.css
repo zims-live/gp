@@ -155,7 +155,7 @@ body {
 
     .four_cell {
         grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(3, 28vh);
+        grid-template-rows: repeat(2, 44vh);
     }
 
     .nine_cell {
