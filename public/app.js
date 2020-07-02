@@ -302,7 +302,11 @@ function closeConnection(peerConnection, roomRef, peerId) {
 
     peerConnection.onconnectionstatechange = function() {
         if (peerConnection.connectionState == 'disconnected' || peerConnection.connectionState == "failed") {
-            roomRef.collection('partyList').doc(peerId).delete();
+            //roomRef.collection('partyList').doc(peerId).delete();
+            peerConnection.close();    
+            if (document.getElementById("video" + peerId + "Container") != null) {
+                document.getElementById("video" + peerId + "Container").remove();
+            }
         }
     }
 }
