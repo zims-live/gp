@@ -1,3 +1,4 @@
+const menu = new mdc.menu.MDCMenu(document.querySelector('.mdc-menu'));
 const configuration = {
     iceServers: [
         {
@@ -137,6 +138,18 @@ function switchStream(peerConnection, stream) {
     });
     console.log('found sender:', sender);
     sender.replaceTrack(videoTrack);
+}
+
+function changeCamera(deviceId) {
+     navigator.mediaDevices.getUserMedia({
+        video: {
+            deviceId: deviceId
+        },
+        audio: true
+     }).then(stream => {
+         document.getElementById('localVideo').srcObject = stream;
+         cameraStream = stream
+     });
 }
 
 function addStream(peerConnection, stream) {
@@ -321,6 +334,11 @@ async function peerRequestConnection(peerId, roomRef, nameId, isUserContent, isP
         sendStream(peerConnection, captureStream)
     } else {
         sendStream(peerConnection, cameraStream)
+        document.getElementById('cameras').childNodes.forEach(camera => {
+            camera.addEventListener('click', () => {
+                switchStream(peerConnection, cameraStream);
+            });
+        });
     }
 
     signalICECandidates(peerConnection, roomRef, peerId, nameId);
@@ -345,7 +363,6 @@ async function peerRequestConnection(peerId, roomRef, nameId, isUserContent, isP
     if (!isUserContent) {
         restartConnection(peerConnection, roomRef, peerId);
     }
-
 }
 
 async function peerAcceptConnection(peerId, roomRef, nameId, isPeerContent, isUserContent) {
@@ -358,6 +375,11 @@ async function peerAcceptConnection(peerId, roomRef, nameId, isPeerContent, isUs
             sendStream(peerConnection, captureStream);
         } else {
             sendStream(peerConnection, cameraStream);
+            document.getElementById('cameras').childNodes.forEach(camera => {
+                camera.addEventListener('click', () => {
+                    switchStream(peerConnection, cameraStream);
+                });
+            });
         }
     }
 
@@ -547,6 +569,23 @@ async function joinRoomById(roomId) {
 }
 
 async function openUserMedia() {
+    navigator.mediaDevices.enumerateDevices().then(devices => {
+        devices.forEach(device => {
+            const deviceNode = document.createElement("li");
+            deviceNode.innerText = device.label;
+            deviceNode.classList.add("mdc-list-item");
+            deviceNode.role = "menuitem";
+            deviceNode.tabIndex = 0;
+
+            if (device.kind == "audioinput") {
+                document.getElementById("microphones").appendChild(deviceNode);
+            } else if (device.kind == "videoinput") {
+                deviceNode.addEventListener('click', () => changeCamera(device.deviceId))
+                document.getElementById("cameras").appendChild(deviceNode);
+            }
+        });
+    });
+
     cameraStream = await navigator.mediaDevices.getUserMedia({
         video: {
             facingMode: "user"
@@ -580,6 +619,10 @@ function hideNavBarOnTap() {
     });
 }
 
+function cameraDropdown() {
+    menu.open = true;
+}
+
 function init() {
     params = new URLSearchParams(location.search);
     roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
@@ -594,6 +637,7 @@ function init() {
     document.querySelector('#createBtn').addEventListener('click', createRoom);
     document.querySelector('#joinBtn').addEventListener('click', joinRoom);
     document.querySelector('#localVideoShowButton').addEventListener('click', showLocalVideo);
+    document.querySelector('#cameraOptions').addEventListener('click', cameraDropdown);
 
     let isFullscreen = false;
     document.getElementById('appFullscreenButton').addEventListener('click', () => {

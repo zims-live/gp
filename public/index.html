@@ -32,6 +32,26 @@
             <button class="material-icons btn-circle hidden" id="screenShareButton">screen_share</button>
             <button class="material-icons btn-circle hidden" id="localVideoShowButton">visibility</button>
             <button class="material-icons btn-circle" id="appFullscreenButton">fullscreen</button>
+            <div id = "deviceDropdown">
+                <!--<button class="mdc-button" id="cameraOptions"><span class="mdc-button__label">Camera</span</button>-->
+                <button class="material-icons btn-circle" id="cameraOptions">arrow_drop_up</button>
+                <div class="mdc-menu-surface--anchor">
+                    <div class="mdc-menu mdc-menu-surface" tabindex="-1" style="transform-origin: center bottom; left: 0px; bottom: 0px; max-height: 767.781px;">
+                        <ul class="mdc-list" role="menu" aria-hidden="true">
+                            <div id="cameras">
+                                <li>Camera</li>
+                                <!--<li class="mdc-list-item mdc-ripple-upgraded" role="menuitem" tabindex="0">Passionfruit</li>-->
+                            </div>
+                            <li class="mdc-list-divider" role="separator"></li>
+                            <div id="microphones">
+                                <li>Audio</li>
+                                <!--<li class="mdc-list-item mdc-ripple-upgraded" role="menuitem" tabindex="-1">Pineapple</li>-->
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
         <div>
             <span id="currentRoom"></span>
