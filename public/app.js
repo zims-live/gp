@@ -131,7 +131,6 @@ function muteToggleEnable() {
 }
 
 function switchStream(peerConnection, stream) {
-    document.getElementById('localVideo').srcObject = stream;
     let videoTrack = stream.getVideoTracks()[0];
     var sender = peerConnection.getSenders().find(function(s) {
         return s.track.kind == videoTrack.kind;
@@ -577,9 +576,9 @@ async function openUserMedia() {
             deviceNode.role = "menuitem";
             deviceNode.tabIndex = 0;
 
-            if (device.kind == "audioinput") {
-                document.getElementById("microphones").appendChild(deviceNode);
-            } else if (device.kind == "videoinput") {
+            //if (device.kind == "audioinput") {
+                //document.getElementById("microphones").appendChild(deviceNode);
+            if (device.kind == "videoinput") {
                 deviceNode.addEventListener('click', () => changeCamera(device.deviceId))
                 document.getElementById("cameras").appendChild(deviceNode);
             }
