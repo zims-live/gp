@@ -1,4 +1,5 @@
 const menu = new mdc.menu.MDCMenu(document.querySelector('.mdc-menu'));
+
 const configuration = {
     iceServers: [
         {
