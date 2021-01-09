@@ -1,4 +1,4 @@
-# ZiMS: A Modern Cloud-based Solution to Multi-party Conferencing
+# ZiMS: Open-source Mesh based WebRTC application using Cloud Firestore and Firebase hosting
 
 ## Current features:
 1. Multi-party
@@ -30,7 +30,7 @@ firebase login
 
 3. Init firebase project
 ```
-firebase init hosting cloudstore
+firebase init hosting firestore
 ```
 4. Use existing project in firebase dashboard
 5. Serve application locally
