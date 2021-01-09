@@ -1,5 +1,7 @@
 # ZiMS: Open-source Mesh based WebRTC application using Cloud Firestore and Firebase hosting
 
+![Image](images/ZimsUI.png)
+
 ## Current features:
 1. Multi-party
 2. Audio mute
