@@ -28,12 +28,11 @@ git clone https://github.com/yzia2000/zims-mesh.git
 firebase login
 ```
 
-3. Init firebase project
+3. Add existing firebase project id
 ```
-firebase init hosting firestore
+firebase use --add
 ```
-4. Use existing project in firebase dashboard
-5. Serve application locally
+4. Serve application locally
 ```
 firebase serve
 ```
