@@ -44,3 +44,9 @@ Access application at outputted URL.
 ```
 firebase deploy
 ```
+
+## Contributing
+Please refer to [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## License
+MIT
