@@ -1,4 +1,6 @@
 const menu = new mdc.menu.MDCMenu(document.querySelector('.mdc-menu'));
+let db = null;
+
 
 const configuration = {
     iceServers: [
@@ -473,7 +475,6 @@ async function createRoom() {
     if (!isHandheld()) {
         document.querySelector('#screenShareButton').classList.remove("hidden");
     }
-    const db = firebase.firestore();
     const roomRef = await db.collection('rooms').doc();
 
     document.querySelector('#shareButton').onclick = () => {
@@ -527,7 +528,6 @@ function acceptConnectionsFromJoiningPeers(roomRef, nameId, isReceiverContent) {
 }
 
 async function joinRoomById(roomId) {
-    const db = firebase.firestore();
     const roomRef = db.collection('rooms').doc(`${roomId}`);
     const roomSnapshot = await roomRef.get();
     console.log('Got room:', roomSnapshot.exists);
@@ -624,6 +624,11 @@ function cameraDropdown() {
 }
 
 function init() {
+    db = firebase.firestore();
+    if (location.hostname === "localhost") {
+        db.useEmulator("localhost", "8080")
+    }
+
     params = new URLSearchParams(location.search);
     roomDialog = new mdc.dialog.MDCDialog(document.querySelector('#room-dialog'));
 

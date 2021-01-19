@@ -230,14 +230,6 @@ body {
     grid-row: 1 / 4;
 }
 
-/*.btn {*/
-    /*color: white !important;*/
-/*}*/
-
-.mdc-button__label {
-    color: white;
-}
-
 .mdc-menu-surface--anchor {
     width: 13vw;
 }
