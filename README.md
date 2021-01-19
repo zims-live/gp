@@ -36,8 +36,9 @@ firebase use --add
 ```
 4. Serve application locally
 ```
-firebase serve
+firebase emulators:start
 ```
+<b>For permission issues, update firestore rules</b>
 Access application at outputted URL.
 
 ## Firebase Deployment
