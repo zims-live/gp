@@ -1,7 +1,0 @@
-{
-  "projects": {
-    "default": "fir-rtc-9bbb9",
-    "test": "fir-rtc-9bbb9",
-    "staging": "fir-rtc-9bbb9"
-  }
-}
