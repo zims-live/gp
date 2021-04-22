@@ -1,5 +1,5 @@
-# ZiMS: Open-source Mesh based WebRTC application using Cloud Firestore and Firebase hosting
-
+# ZiMS GP
+![Discord](https://img.shields.io/discord/807533216520863784?label=Discord)
 ![Image](images/ZimsUI.png)
 
 ## Current features:
